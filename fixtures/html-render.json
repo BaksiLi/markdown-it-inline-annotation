@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "description": "Host-neutral Inline Annotation HTML rendering conformance fixtures.",
+  "cases": [
+    {
+      "id": "ruby-basic-over",
+      "category": "ruby",
+      "name": "basic over ruby",
+      "input": "[漢字]^^(かんじ)",
+      "contains": ["class=\"ia-ruby ia-ruby-over\"", "漢字", "<rt>かんじ</rt>"],
+      "counts": [{ "pattern": "<rt>", "count": 1 }]
+    },
+    {
+      "id": "ruby-basic-under",
+      "category": "ruby",
+      "name": "basic under ruby",
+      "input": "[base]^_(ann)",
+      "contains": ["ia-ruby-under", "<rt>ann</rt>"],
+      "counts": [{ "pattern": "<rt>", "count": 1 }]
+    },
+    {
+      "id": "ruby-abbreviated",
+      "category": "ruby",
+      "name": "abbreviated base",
+      "input": "東京^^(とうきょう)",
+      "contains": ["東京", "<rt>とうきょう</rt>"],
+      "counts": [{ "pattern": "<rt>", "count": 1 }]
+    },
+    {
+      "id": "ruby-multiple",
+      "category": "ruby",
+      "name": "multiple annotations in one paragraph",
+      "input": "[東]^^(ひがし)[京]^^(きょう)",
+      "contains": ["<rt>ひがし</rt>", "<rt>きょう</rt>"],
+      "counts": [{ "pattern": "<ruby", "count": 2 }]
+    },
+    {
+      "id": "ruby-pipe-two-slot",
+      "category": "slots",
+      "name": "pipe two-slot annotation",
+      "input": "[北京]^^(ペキン|Beijing)",
+      "contains": ["ia-ruby-double", "<rt>ペキン</rt>", "<rt>Beijing</rt>"],
+      "counts": [{ "pattern": "<rt>", "count": 2 }]
+    },
+    {
+      "id": "ruby-mixed-chain",
+      "category": "slots",
+      "name": "mixed chained annotation",
+      "input": "[base]^^(over)^_(under)",
+      "contains": ["ia-ruby-double", "<rt>over</rt>", "<rt>under</rt>"]
+    },
+    {
+      "id": "ruby-reverse-chain",
+      "category": "slots",
+      "name": "reverse chained annotation",
+      "input": "[base]^_(under)^^(over)",
+      "contains": ["ia-ruby-double", "<rt>under</rt>", "<rt>over</rt>"]
+    },
+    {
+      "id": "ruby-same-op-chain-not-merged",
+      "category": "slots",
+      "name": "same operator chain is not merged",
+      "input": "[base]^^(a)^^(b)",
+      "contains": ["<rt>a</rt>", "^^(b)"],
+      "notContains": ["ia-ruby-double"]
+    },
+    {
+      "id": "ruby-pipe-saturated-consumes-chain",
+      "category": "slots",
+      "name": "pipe-saturated annotation consumes later opposite operator",
+      "input": "[李太白]^^(り たい はく|Lǐ Tài Bái)^_(..)",
+      "contains": ["<rt>り</rt>", "<rt>たい</rt>", "<rt>はく</rt>", "<rt>Lǐ</rt>", "<rt>Tài</rt>", "<rt>Bái</rt>"],
+      "notContains": ["ia-bouten", "^_(..)"]
+    },
+    {
+      "id": "align-per-character",
+      "category": "alignment",
+      "name": "per-character alignment",
+      "input": "[春夏秋冬]^^(はる なつ あき ふゆ)",
+      "contains": ["<rt>はる</rt>", "<rt>なつ</rt>", "<rt>あき</rt>", "<rt>ふゆ</rt>"],
+      "counts": [{ "pattern": "<ruby", "count": 4 }]
+    },
+    {
+      "id": "align-auto-hide",
+      "category": "alignment",
+      "name": "auto-hide matching character",
+      "input": "[振り仮名]^^(ふ り が な)",
+      "contains": ["<rt>ふ</rt>", "り<rp>(</rp><rt></rt>", "<rt>が</rt>", "<rt>な</rt>"]
+    },
+    {
+      "id": "align-two-level-per-character",
+      "category": "alignment",
+      "name": "two-level per-character alignment",
+      "input": "[李太白]^^(Lǐ Tài Bái|ㄌㄧˇ ㄊㄞˋ ㄅㄞˊ)",
+      "contains": ["<rt>Lǐ</rt>", "<rt>Tài</rt>", "<rt>Bái</rt>", "<rt>ㄌㄧˇ</rt>", "<rt>ㄊㄞˋ</rt>", "<rt>ㄅㄞˊ</rt>"],
+      "counts": [{ "pattern": "ia-ruby-double", "count": 3 }]
+    },
+    {
+      "id": "nested-bracket-span",
+      "category": "nesting",
+      "name": "nested bracket span",
+      "input": "[[護]^^(まも)れ]^_(プロテゴ)",
+      "contains": ["<rt>まも</rt>", "<rt>プロテゴ</rt>", "れ"]
+    },
+    {
+      "id": "nested-title-style",
+      "category": "nesting",
+      "name": "nested title-style annotations",
+      "input": "[初音ミク^^(偉大なる|世界一姫様)]^_(Vocaloid)",
+      "contains": ["<rt>偉大なる</rt>", "<rt>世界一姫様</rt>", "<rt>Vocaloid</rt>"]
+    },
+    {
+      "id": "decoration-bouten-over",
+      "category": "decoration",
+      "name": "bouten over",
+      "input": "[漢字]^^(..)",
+      "contains": ["ia-bouten-over", "漢字"],
+      "notContains": ["<ruby"]
+    },
+    {
+      "id": "decoration-bouten-both",
+      "category": "decoration",
+      "name": "bouten both slots",
+      "input": "[漢字]^^(..)^_(..)",
+      "contains": ["ia-bouten-over", "ia-bouten-under"],
+      "notContains": ["<ruby"]
+    },
+    {
+      "id": "decoration-underline-wavy",
+      "category": "decoration",
+      "name": "underline wavy",
+      "input": "[base]^_(.~)",
+      "contains": ["ia-underline-wavy", "text-decoration-style:wavy"],
+      "notContains": ["<ruby"]
+    },
+    {
+      "id": "decoration-over-underline-pattern-is-text",
+      "category": "decoration",
+      "name": "over-slot underline pattern is ruby text",
+      "input": "[base]^^(.-)",
+      "contains": ["<ruby", "<rt>.-</rt>"],
+      "notContains": ["ia-underline"]
+    },
+    {
+      "id": "decoration-ruby-plus-underline",
+      "category": "decoration",
+      "name": "ruby plus underline",
+      "input": "[重要語句]^^(じゅうようごく|.-)",
+      "contains": ["ia-ruby-mixed", "ia-underline", "<rt>じゅうようごく</rt>"]
+    },
+    {
+      "id": "escape-pipe-literal",
+      "category": "escaping",
+      "name": "escaped pipe stays literal",
+      "input": "[A|B]^^(a\\|b)",
+      "contains": ["A|B", "<rt>a|b</rt>"],
+      "counts": [{ "pattern": "<rt>", "count": 1 }]
+    },
+    {
+      "id": "escape-right-paren",
+      "category": "escaping",
+      "name": "escaped right paren stays literal",
+      "input": "[base]^^(a\\)b)",
+      "contains": ["<rt>a)b</rt>"]
+    },
+    {
+      "id": "escape-close-bracket-base",
+      "category": "escaping",
+      "name": "escaped close bracket in base stays literal",
+      "input": "[A\\]B]^^(ann)",
+      "contains": ["A]B", "<rt>ann</rt>"]
+    },
+    {
+      "id": "escape-open-bracket-base",
+      "category": "escaping",
+      "name": "escaped open bracket in base stays literal",
+      "input": "[A\\[B]^^(ann)",
+      "contains": ["A[B", "<rt>ann</rt>"]
+    },
+    {
+      "id": "safety-html-escaped",
+      "category": "safety",
+      "name": "base and annotation HTML are escaped",
+      "input": "[<img src=x>]^^(<script>x</script>)",
+      "contains": ["&lt;img src=x&gt;", "<rt>&lt;script&gt;x&lt;/script&gt;</rt>"],
+      "notContains": ["<img src=x>", "<script>"]
+    },
+    {
+      "id": "safety-ia-class-text-escaped",
+      "category": "safety",
+      "name": "ia class text without generated tag is escaped",
+      "input": "[ia-ruby <img src=x>]^^(ann)",
+      "contains": ["ia-ruby &lt;img src=x&gt;", "<rt>ann</rt>"],
+      "notContains": ["ia-ruby <img src=x>"]
+    },
+    {
+      "id": "safety-generated-looking-html-escaped",
+      "category": "safety",
+      "name": "user-authored generated-looking HTML is escaped",
+      "input": "[<span class=\"ia-ruby\"><img src=x></span>]^^(ann)",
+      "contains": ["&lt;span class=&quot;ia-ruby&quot;&gt;&lt;img src=x&gt;&lt;/span&gt;", "<rt>ann</rt>"],
+      "notContains": ["<span class=\"ia-ruby\"><img src=x></span>"]
+    },
+    {
+      "id": "reject-newline-annotation",
+      "category": "rejection",
+      "name": "newline in annotation rejects",
+      "input": "[base]^^(ann\ntext)",
+      "contains": ["[base]^^(ann\ntext)"],
+      "notContains": ["<ruby"]
+    }
+  ]
+}

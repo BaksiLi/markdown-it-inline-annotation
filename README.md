@@ -12,7 +12,10 @@ Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dot
 
 It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https://blog.baksili.codes/markdown-ruby), with the older Logseq plugin treated as the reference implementation for the first compatibility target.
 
-See [SPEC.md](./SPEC.md) for the normative grammar and compatibility notes, and [examples/before-after.html](./examples/before-after.html) for a small visual before/after page.
+See [SPEC.md](./SPEC.md) for the normative grammar and compatibility notes,
+[examples/playground.html](./examples/playground.html) for a minimal core
+renderer playground, and [examples/before-after.html](./examples/before-after.html)
+for a small visual before/after page.
 
 ## Ports and Implementations
 
@@ -38,6 +41,14 @@ const { inlineAnnotationPlugin } = require("markdown-it-inline-annotation");
 
 const md = new MarkdownIt().use(inlineAnnotationPlugin);
 md.render("[漢字]^^(かんじ)");
+```
+
+For integrations that only need the parser/HTML renderer and not markdown-it:
+
+```js
+const { renderInlineAnnotationsToHtml } = require("markdown-it-inline-annotation/core");
+
+renderInlineAnnotationsToHtml("[漢字]^^(かんじ)");
 ```
 
 ## Supported Syntax
@@ -92,7 +103,17 @@ npm test
 node -e "const MarkdownIt = require('markdown-it'); const { inlineAnnotationPlugin } = require('./dist/index.js'); console.log(new MarkdownIt().use(inlineAnnotationPlugin).render('[漢字]^^(かんじ)'))"
 ```
 
-`npm test` builds the package and runs the Logseq demo compatibility corpus, including multiple annotations in one paragraph, escaped pipes, nested spans, per-character alignment, bouten, underline, and mixed ruby plus decoration.
+`npm test` builds the package and runs the shared host-neutral conformance corpus
+from [`fixtures/html-render.json`](./fixtures/html-render.json), plus
+markdown-it-specific integration cases. Host adapters should run the shared
+corpus first, then add adapter or workflow tests separately.
+
+Run `npm run build:examples` to regenerate the static examples from the current
+parser, stylesheet, and shared fixture corpus.
+
+Run `npm run check:release` before publishing. It runs tests, regenerates
+examples, verifies package subpath exports, checks whitespace, and performs an
+`npm pack --dry-run` using a local temp cache.
 
 ## Compatibility Notes
 

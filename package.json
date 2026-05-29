@@ -8,6 +8,7 @@
   "files": [
     "dist",
     "styles",
+    "fixtures",
     "SPEC.md",
     "CHANGELOG.md",
     "examples"
@@ -18,14 +19,21 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.mjs",
+      "require": "./dist/core.js"
+    },
+    "./fixtures/html-render.json": "./fixtures/html-render.json",
     "./styles.css": "./styles/inline-annotation.css"
   },
   "scripts": {
     "build": "node scripts/build.mjs",
     "build:examples": "npm run build && node scripts/build-examples.mjs",
+    "check:release": "node scripts/check-release.mjs",
     "test": "npm run build && node test.js",
-    "prepack": "npm run build",
-    "prepublishOnly": "npm test"
+    "prepack": "npm run build:examples",
+    "prepublishOnly": "npm run check:release"
   },
   "keywords": [
     "markdown-it",

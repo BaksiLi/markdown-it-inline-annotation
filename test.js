@@ -1,10 +1,12 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const MarkdownIt = require("markdown-it");
 const {
   inlineAnnotationPlugin,
   renderInlineAnnotationsToHtml,
   findInlineAnnotation,
 } = require("./dist/index.js");
+const htmlRenderFixtureCorpus = require("./fixtures/html-render.json");
 
 function md(options) {
   return new MarkdownIt().use(inlineAnnotationPlugin, options);
@@ -21,6 +23,49 @@ function test(name, fn) {
 
 function hasAll(value, parts) {
   for (const part of parts) assert.ok(value.includes(part), `Missing ${part} in ${value}`);
+}
+
+function hasNone(value, parts) {
+  for (const part of parts) assert.ok(!value.includes(part), `Unexpected ${part} in ${value}`);
+}
+
+test("shared fixture corpus is well formed", () => {
+  assert.equal(htmlRenderFixtureCorpus.version, 1);
+  assert.ok(Array.isArray(htmlRenderFixtureCorpus.cases));
+  const ids = new Set();
+  for (const fixture of htmlRenderFixtureCorpus.cases) {
+    assert.ok(fixture.id, "fixture id is required");
+    assert.ok(!ids.has(fixture.id), `duplicate fixture id ${fixture.id}`);
+    ids.add(fixture.id);
+    assert.ok(fixture.category, `fixture ${fixture.id} category is required`);
+    assert.ok(fixture.name, `fixture ${fixture.id} name is required`);
+    assert.ok(typeof fixture.input === "string", `fixture ${fixture.id} input must be a string`);
+    assert.ok(
+      (fixture.contains && fixture.contains.length > 0) ||
+        (fixture.notContains && fixture.notContains.length > 0) ||
+        (fixture.counts && fixture.counts.length > 0),
+      `fixture ${fixture.id} needs at least one assertion`
+    );
+    for (const count of fixture.counts || []) {
+      assert.ok(count.pattern, `fixture ${fixture.id} count pattern is required`);
+      assert.ok(Number.isInteger(count.count) && count.count >= 0, `fixture ${fixture.id} count must be a non-negative integer`);
+    }
+  }
+});
+
+for (const fixture of htmlRenderFixtureCorpus.cases) {
+  test(`shared fixture ${fixture.id}: ${fixture.name}`, () => {
+    const html = inline(fixture.input);
+    hasAll(html, fixture.contains);
+    hasNone(html, fixture.notContains || []);
+    for (const count of fixture.counts || []) {
+      assert.equal(
+        html.split(count.pattern).length - 1,
+        count.count,
+        `Expected ${count.pattern} count ${count.count} in ${html}`
+      );
+    }
+  });
 }
 
 test("basic bracketed over ruby", () => {
@@ -206,6 +251,22 @@ test("findInlineAnnotation returns source range", () => {
   assert.ok(match);
   assert.equal(match.start, 4);
   assert.equal(match.source, "[漢字]^^(かんじ)");
+});
+
+test("package subpath exports expose core and fixtures", () => {
+  const core = require("markdown-it-inline-annotation/core");
+  const corpus = require("markdown-it-inline-annotation/fixtures/html-render.json");
+  assert.equal(typeof core.renderInlineAnnotationsToHtml, "function");
+  assert.equal(corpus.version, 1);
+  assert.ok(corpus.cases.length > 0);
+});
+
+test("playground embeds fixture data without executable HTML sentinels", () => {
+  const html = readFileSync("examples/playground.html", "utf8");
+  assert.equal((html.match(/<\/script>/g) || []).length, 1);
+  assert.ok(html.includes("\\u003cscript\\u003e"));
+  assert.ok(html.includes("\\u003c/script\\u003e"));
+  assert.ok(!html.includes('"[<img src=x>]^^(<script>x</script>)"'));
 });
 
 let passed = 0;

@@ -147,3 +147,14 @@ The canonical HTML class contract (default prefix `ia-`) is shared by every impl
 Implementations should avoid parsing Inline Annotation inside code spans, links, raw HTML, and entities. Emphasis and other inline constructs should continue to be parsed by the host Markdown engine.
 
 Implementations must escape user-provided base and annotation text before producing HTML.
+
+## Conformance Fixtures
+
+The shared host-neutral fixture corpus lives in `fixtures/html-render.json`.
+Adapters should run this corpus before adding host-specific tests. The fixtures
+assert semantic fragments and substring counts rather than exact serialized HTML
+so that markdown-it, Logseq, Obsidian, and future unified adapters can differ in
+wrapper markup or attribute ordering while preserving the same syntax behavior.
+
+Host-specific behavior, such as Logseq slash-command conversion or parser
+conflicts, should be tested outside this corpus.
