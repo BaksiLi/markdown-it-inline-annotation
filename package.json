@@ -1,0 +1,67 @@
+{
+  "name": "markdown-it-inline-annotation",
+  "version": "0.1.0",
+  "description": "markdown-it plugin for Inline Annotation — ruby, bouten, underline, and two-slot text decorations.",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "styles",
+    "SPEC.md",
+    "CHANGELOG.md",
+    "examples"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./styles.css": "./styles/inline-annotation.css"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:examples": "npm run build && node scripts/build-examples.mjs",
+    "test": "npm run build && node test.js",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm test"
+  },
+  "keywords": [
+    "markdown-it",
+    "markdown-it-plugin",
+    "inline-annotation",
+    "ruby",
+    "furigana",
+    "bouten",
+    "underline",
+    "annotation",
+    "phonetic",
+    "japanese",
+    "chinese",
+    "korean",
+    "pinyin",
+    "interlinear"
+  ],
+  "author": "Baksi Li",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BaksiLi/markdown-it-inline-annotation.git"
+  },
+  "homepage": "https://blog.baksili.codes/markdown-ruby",
+  "bugs": {
+    "url": "https://github.com/BaksiLi/markdown-it-inline-annotation/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^13.0.0",
+    "markdown-it": "^14.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "markdown-it": ">=12.0.0"
+  }
+}

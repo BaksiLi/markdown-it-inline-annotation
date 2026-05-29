@@ -1,0 +1,89 @@
+/*
+ * Inline Annotation — canonical reference stylesheet
+ *
+ * Class contract shared by every Inline Annotation implementation
+ * (markdown-it, Logseq, Obsidian, future remark/unified).
+ *
+ * The default class prefix is `ia-`. If you pass a custom `classPrefix`,
+ * adapt these selectors accordingly.
+ *
+ * This stylesheet makes class-mode output (inlineStyles: false) render
+ * identically to the default inline-style output. The over/under
+ * positions are declared explicitly on BOTH slots because `ruby-position`
+ * is a CSS inherited property: a nested over-ruby inside an under-ruby
+ * would otherwise inherit `under` and drop both annotations below the base.
+ */
+
+ruby.ia-ruby {
+  display: ruby;
+}
+
+ruby.ia-ruby rt {
+  font-size: 0.6em;
+  line-height: 1;
+}
+
+/* Explicit positioning — required to break ruby-position inheritance. */
+ruby.ia-ruby.ia-ruby-over {
+  ruby-position: over;
+}
+
+ruby.ia-ruby.ia-ruby-under {
+  ruby-position: under;
+}
+
+/* Bouten (emphasis dots) above. */
+span.ia-bouten.ia-bouten-over {
+  text-emphasis: filled dot;
+  -webkit-text-emphasis: filled dot;
+  text-emphasis-position: over right;
+  -webkit-text-emphasis-position: over right;
+}
+
+/* Bouten below (dotted underline). */
+span.ia-bouten.ia-bouten-under {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+}
+
+/* Bouten above + below. */
+span.ia-bouten.ia-bouten-over.ia-bouten-under {
+  text-emphasis: filled dot;
+  -webkit-text-emphasis: filled dot;
+  text-emphasis-position: over right;
+  -webkit-text-emphasis-position: over right;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+}
+
+/* Underline modifiers: .- solid, .~ wavy, .= double. */
+span.ia-underline {
+  text-decoration-line: underline;
+  text-underline-offset: 0.15em;
+}
+
+.ia-underline-wavy {
+  text-decoration-style: wavy;
+}
+
+.ia-underline-double {
+  text-decoration-style: double;
+}
+
+/* Ruby annotation combined with a decoration modifier. */
+ruby.ia-ruby-mixed.ia-bouten-over {
+  text-emphasis: filled dot;
+  -webkit-text-emphasis: filled dot;
+  text-emphasis-position: over right;
+  -webkit-text-emphasis-position: over right;
+}
+
+ruby.ia-ruby-mixed.ia-bouten-under {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+}
+
+ruby.ia-ruby-mixed.ia-underline {
+  text-decoration-line: underline;
+  text-underline-offset: 0.15em;
+}
