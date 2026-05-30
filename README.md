@@ -12,10 +12,9 @@ Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dot
 
 It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https://blog.baksili.codes/markdown-ruby), with the older Logseq plugin treated as the reference implementation for the first compatibility target.
 
-See [SPEC.md](./SPEC.md) for the normative grammar and compatibility notes,
-[examples/playground.html](./examples/playground.html) for a minimal core
-renderer playground, and [examples/before-after.html](./examples/before-after.html)
-for a small visual before/after page.
+- **[SPEC.md](./SPEC.md)** — the normative grammar, class contract, and compatibility notes.
+- **[examples/playground.html](./examples/playground.html)** — a minimal core renderer playground.
+- **[examples/before-after.html](./examples/before-after.html)** — a small visual before/after page.
 
 ## Ports and Implementations
 
@@ -23,9 +22,9 @@ for a small visual before/after page.
 | --- | --- | --- |
 | [logseq-furigana-ruby](https://github.com/BaksiLi/logseq-furigana-ruby) | Reference implementation | Mature Logseq plugin; includes macros and conversion commands for Logseq-specific parser conflicts. |
 | `markdown-it-inline-annotation` | Current package | Portable markdown-it adapter backed by the shared Inline Annotation core. |
+| [vscode-inline-annotation](https://github.com/BaksiLi/vscode-inline-annotation) | Published | Preview-only adapter on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation); uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
 | Obsidian plugin | Planned | Expected to start with a reading-view postprocessor using the same core. |
 | remark/unified adapter | Planned later | Should use the spec and shared fixtures once the syntax is stable across markdown-it and Obsidian. |
-| [vscode-inline-annotation](https://github.com/BaksiLi/vscode-inline-annotation) | In progress | Preview-only adapter using VS Code's `extendMarkdownIt` hook; no preview scripts or external resources. |
 
 ## Install
 
@@ -79,10 +78,15 @@ Per-character annotation is enabled when space-separated annotation parts match 
 md.use(inlineAnnotationPlugin, {
   classPrefix: "ia",
   enableAbbreviated: true,
+  enableSpaceAlignment: true,
   inlineStyles: true,
   fallbackParens: "()",
 });
 ```
+
+Set `enableSpaceAlignment: false` if multi-word glosses such as
+`[真值]^^(Truth Value)` should always render as group ruby instead of being
+auto-aligned by spaces. The default keeps per-character ruby enabled.
 
 ## Styling
 

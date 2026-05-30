@@ -79,6 +79,8 @@ If a slot annotation is space-separated and the part count matches the base char
 
 If an annotation part is identical to the base character, the renderer may hide that annotation while preserving ruby spacing.
 
+Space alignment is a rendering policy, not a mandatory parse rule. Implementations may expose an option to disable it when natural-language glosses with spaces are more important than automatic per-character ruby.
+
 Two-level per-character ruby is valid when both slots can align to the same base:
 
 ```markdown

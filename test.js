@@ -148,6 +148,12 @@ test("per-character alignment", () => {
   assert.equal((html.match(/<ruby/g) || []).length, 4);
 });
 
+test("space alignment can be disabled", () => {
+  const html = inline("[真值]^^(Truth Value)", { enableSpaceAlignment: false });
+  hasAll(html, ["真值", "<rt>Truth Value</rt>"]);
+  assert.equal((html.match(/<rt>/g) || []).length, 1);
+});
+
 test("two-level per-character alignment", () => {
   const html = inline("[李太白]^^(Lǐ Tài Bái|ㄌㄧˇ ㄊㄞˋ ㄅㄞˊ)");
   hasAll(html, ["<rt>Lǐ</rt>", "<rt>Tài</rt>", "<rt>Bái</rt>", "<rt>ㄌㄧˇ</rt>", "<rt>ㄊㄞˋ</rt>", "<rt>ㄅㄞˊ</rt>"]);

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Add `enableSpaceAlignment` to let integrations disable automatic per-character ruby alignment for space-separated annotations.
+- Document that space alignment is a rendering policy, not a mandatory parse rule.
+- Update implementation status for the VS Code preview adapter.
+
 ## 0.1.1
 
 - Add a shared host-neutral conformance fixture corpus at `fixtures/html-render.json` and export it as `markdown-it-inline-annotation/fixtures/html-render.json`.

@@ -5,6 +5,7 @@ export type UnderlineStyle = "solid" | "wavy" | "double";
 export interface InlineAnnotationOptions {
   classPrefix?: string;
   enableAbbreviated?: boolean;
+  enableSpaceAlignment?: boolean;
   inlineStyles?: boolean;
   fallbackParens?: string;
 }
@@ -19,6 +20,7 @@ export interface InlineAnnotationMatch {
 interface ResolvedOptions {
   classPrefix: string;
   enableAbbreviated: boolean;
+  enableSpaceAlignment: boolean;
   inlineStyles: boolean;
   fallbackParens: string;
 }
@@ -26,6 +28,7 @@ interface ResolvedOptions {
 const DEFAULT_OPTIONS: ResolvedOptions = {
   classPrefix: "ia",
   enableAbbreviated: true,
+  enableSpaceAlignment: true,
   inlineStyles: true,
   fallbackParens: "()",
 };
@@ -238,8 +241,8 @@ function renderRubyLevels(baseHtml: string, plainBase: string, op: AnnotationOp,
   if (capped.length === 2) {
     const raw1 = unescapeMarkup(levels[0]);
     const raw2 = unescapeMarkup(levels[1]);
-    const ann1Parts = raw1.includes(" ") ? splitBySpaces(raw1) : null;
-    const ann2Parts = raw2.includes(" ") ? splitBySpaces(raw2) : null;
+    const ann1Parts = options.enableSpaceAlignment && raw1.includes(" ") ? splitBySpaces(raw1) : null;
+    const ann2Parts = options.enableSpaceAlignment && raw2.includes(" ") ? splitBySpaces(raw2) : null;
     const can1Align = ann1Parts !== null && ann1Parts.length === baseChars.length;
     const can2Align = ann2Parts !== null && ann2Parts.length === baseChars.length;
 
@@ -292,7 +295,7 @@ function renderRubyLevels(baseHtml: string, plainBase: string, op: AnnotationOp,
 
   if (capped.length === 1) {
     const raw = unescapeMarkup(levels[0]);
-    if (raw.includes(" ")) {
+    if (options.enableSpaceAlignment && raw.includes(" ")) {
       const parts = splitBySpaces(raw);
       if (parts.length === baseChars.length) {
         return baseChars
