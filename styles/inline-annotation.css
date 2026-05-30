@@ -56,18 +56,39 @@ span.ia-bouten.ia-bouten-over.ia-bouten-under {
   text-underline-offset: 0.15em;
 }
 
-/* Underline modifiers: .- solid, .~ wavy, .= double. */
+/* Line marks: .- solid, .~ wavy, .= double.
+ * The slot picks the side — over renders as an overline, under as an underline. */
 span.ia-underline {
   text-decoration-line: underline;
   text-underline-offset: 0.15em;
 }
 
-.ia-underline-wavy {
+span.ia-overline {
+  text-decoration-line: overline;
+}
+
+.ia-underline-wavy,
+.ia-overline-wavy {
   text-decoration-style: wavy;
 }
 
-.ia-underline-double {
+.ia-underline-double,
+.ia-overline-double {
   text-decoration-style: double;
+}
+
+/* Both sides at once: a single text-decoration-line must carry both keywords,
+ * otherwise the two declarations collide and one line is dropped. The combined
+ * selectors below outrank the single-side rules above. */
+span.ia-overline.ia-underline {
+  text-decoration-line: overline underline;
+}
+
+span.ia-bouten-under.ia-overline {
+  text-decoration: none;
+  text-decoration-line: overline underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.15em;
 }
 
 /* Ruby annotation combined with a decoration modifier. */
@@ -86,4 +107,8 @@ ruby.ia-ruby-mixed.ia-bouten-under {
 ruby.ia-ruby-mixed.ia-underline {
   text-decoration-line: underline;
   text-underline-offset: 0.15em;
+}
+
+ruby.ia-ruby-mixed.ia-overline {
+  text-decoration-line: overline;
 }

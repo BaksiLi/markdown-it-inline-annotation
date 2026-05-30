@@ -140,10 +140,17 @@ function rubyPositionStyle(position: AnnotationPosition): string {
   return position === "under" ? STYLE_RUBY_UNDER : STYLE_RUBY_OVER;
 }
 
-function underlineStyle(style: UnderlineStyle): string {
-  let css = "text-decoration-line:underline;text-underline-offset:0.15em";
+// A line mark renders as an overline in the over slot and an underline in the
+// under slot. The slot decides the side; the glyph (.-/.~/.=) decides the style.
+function lineKeyword(position: AnnotationPosition): string {
+  return position === "over" ? "overline" : "underline";
+}
+
+function lineCss(position: AnnotationPosition, style: UnderlineStyle): string {
+  let css = `text-decoration-line:${lineKeyword(position)}`;
+  if (position === "under") css += ";text-underline-offset:0.15em";
   if (style === "wavy") css += ";text-decoration-style:wavy";
-  if (style === "double") css += ";text-decoration-style:double";
+  else if (style === "double") css += ";text-decoration-style:double";
   return css;
 }
 
@@ -151,9 +158,10 @@ function boutenStyle(position: AnnotationPosition): string {
   return position === "over" ? STYLE_BOUTEN_OVER : STYLE_BOUTEN_UNDER;
 }
 
-function underlineClass(options: ResolvedOptions, style: UnderlineStyle): string {
-  const base = className(options, "underline");
-  return style === "solid" ? base : `${base} ${className(options, `underline-${style}`)}`;
+function lineClass(options: ResolvedOptions, position: AnnotationPosition, style: UnderlineStyle): string {
+  const keyword = lineKeyword(position);
+  const base = className(options, keyword);
+  return style === "solid" ? base : `${base} ${className(options, `${keyword}-${style}`)}`;
 }
 
 function splitBySpaces(text: string): string[] {
@@ -188,46 +196,82 @@ function renderRubyElement(
   return `<ruby class="${classes}"${attrStyle(styles, options)}>${baseHtml}<rp>${open}</rp><rt>${annotationHtml}</rt><rp>${close}</rp></ruby>`;
 }
 
-function renderBouten(baseHtml: string, position: AnnotationPosition, options: ResolvedOptions): string {
-  const classes = `${className(options, "bouten")} ${className(options, `bouten-${position}`)}`;
-  return `<span class="${classes}"${attrStyle(boutenStyle(position), options)}>${baseHtml}</span>`;
+type DecorationSlot =
+  | { kind: "bouten"; position: AnnotationPosition }
+  | { kind: "line"; position: AnnotationPosition; style: UnderlineStyle };
+
+type ClassifiedSlot = DecorationSlot | { kind: "ruby"; raw: string };
+
+// A slot is a decoration mark only when its *raw* content matches a glyph
+// exactly. Escaping the leading dot (e.g. `\.-`) keeps it as literal ruby text.
+function classifySlot(raw: string, position: AnnotationPosition): ClassifiedSlot {
+  if (raw === BOUTEN_PATTERN) return { kind: "bouten", position };
+  const style = UNDERLINE_STYLES[raw];
+  if (style) return { kind: "line", position, style };
+  return { kind: "ruby", raw };
 }
 
-function renderBoutenBoth(baseHtml: string, options: ResolvedOptions): string {
-  const classes = `${className(options, "bouten")} ${className(options, "bouten-over")} ${className(options, "bouten-under")}`;
-  return `<span class="${classes}"${attrStyle(`${STYLE_BOUTEN_OVER};${STYLE_BOUTEN_UNDER}`, options)}>${baseHtml}</span>`;
-}
+function renderDecorations(baseHtml: string, decos: DecorationSlot[], options: ResolvedOptions): string {
+  const classes: string[] = [];
+  let emphasis = ""; // bouten over uses text-emphasis (independent of text-decoration)
+  const decorationLines: string[] = []; // merged into one text-decoration-line value
+  let decorationStyle = ""; // text-decoration-style is shared across all lines on a span
+  let underlineOffset = false;
 
-function renderUnderline(baseHtml: string, style: UnderlineStyle, options: ResolvedOptions): string {
-  return `<span class="${underlineClass(options, style)}"${attrStyle(underlineStyle(style), options)}>${baseHtml}</span>`;
+  if (decos.some((d) => d.kind === "bouten")) classes.push(className(options, "bouten"));
+
+  // Over before under so the merged text-decoration-line reads "overline underline".
+  const ordered = [...decos].sort((a, b) => (a.position === b.position ? 0 : a.position === "over" ? -1 : 1));
+  for (const deco of ordered) {
+    if (deco.kind === "bouten") {
+      classes.push(className(options, `bouten-${deco.position}`));
+      if (deco.position === "over") {
+        emphasis = STYLE_BOUTEN_OVER;
+      } else {
+        decorationLines.push("underline");
+        decorationStyle = decorationStyle || "dotted";
+        underlineOffset = true;
+      }
+    } else {
+      classes.push(lineClass(options, deco.position, deco.style));
+      decorationLines.push(lineKeyword(deco.position));
+      if (deco.position === "under") underlineOffset = true;
+      if (deco.style === "wavy") decorationStyle = "wavy";
+      else if (deco.style === "double") decorationStyle = "double";
+    }
+  }
+
+  const styleParts: string[] = [];
+  if (emphasis) styleParts.push(emphasis);
+  if (decorationLines.length) {
+    // A single text-decoration-line declaration carries every line so that an
+    // overline and an underline can coexist (two declarations would collide).
+    styleParts.push(`text-decoration-line:${decorationLines.join(" ")}`);
+    if (underlineOffset) styleParts.push("text-underline-offset:0.15em");
+    if (decorationStyle) styleParts.push(`text-decoration-style:${decorationStyle}`);
+  }
+  return `<span class="${classes.join(" ")}"${attrStyle(styleParts.join(";"), options)}>${baseHtml}</span>`;
 }
 
 function renderRubyWithDecoration(
   baseHtml: string,
   rubyHtml: string,
-  rubyOp: AnnotationOp,
-  decorationOp: AnnotationOp,
-  decoration: "bouten" | "underline",
-  underline: UnderlineStyle | null,
+  rubyPosition: AnnotationPosition,
+  deco: DecorationSlot,
   options: ResolvedOptions
 ): string {
-  const rubyPosition = positionForOp(rubyOp);
-  const decorationPosition = positionForOp(decorationOp);
-  const decorationClass =
-    decoration === "bouten"
-      ? className(options, `bouten-${decorationPosition}`)
-      : underlineClass(options, underline ?? "solid");
-  const style =
-    decoration === "bouten"
-      ? boutenStyle(decorationPosition)
-      : underlineStyle(underline ?? "solid");
+  const decoClass =
+    deco.kind === "bouten"
+      ? className(options, `bouten-${deco.position}`)
+      : lineClass(options, deco.position, deco.style);
+  const decoStyle = deco.kind === "bouten" ? boutenStyle(deco.position) : lineCss(deco.position, deco.style);
   return renderRubyElement(
     baseHtml,
     rubyHtml,
     rubyPosition,
     options,
-    `${className(options, "ruby-mixed")} ${decorationClass}`,
-    style
+    `${className(options, "ruby-mixed")} ${decoClass}`,
+    decoStyle
   );
 }
 
@@ -315,11 +359,6 @@ function renderRubyLevels(baseHtml: string, plainBase: string, op: AnnotationOp,
   return baseHtml;
 }
 
-function underlinePattern(pattern: string, op: AnnotationOp): UnderlineStyle | null {
-  if (op !== "^_") return null;
-  return UNDERLINE_STYLES[unescapeMarkup(pattern)] ?? null;
-}
-
 function sourceBase(source: string): string {
   if (source[0] === "[") {
     const close = findBracketClose(source, 0, source.length);
@@ -354,74 +393,45 @@ function stripInlineAnnotationMarkup(input: string, options: ResolvedOptions): s
 function renderAnnotation(baseRaw: string, op: AnnotationOp, annRaw: string, op2: AnnotationOp | null, annRaw2: string | null, options: ResolvedOptions): string {
   const baseHtml = renderInlineAnnotationsToHtml(baseRaw, options);
   const plainBase = hasInlineAnnotation(baseRaw) ? "" : stripInlineAnnotationMarkup(baseRaw, options);
+
+  // Resolve the expression into at most two positioned slots (over + under).
+  // Pipe notation fills both slots through one operator; a distinct chained
+  // operator fills the opposite slot. The parser only forwards a chained
+  // operator when the first annotation is single-level, so capacity (2) is
+  // never exceeded here — over-capacity input is left in the stream as text.
   const levels = splitByUnescapedPipe(annRaw);
-
-  if (annRaw2 !== null && op2 !== null && levels.length === 1) {
-    const outerSpecial = unescapeMarkup(annRaw);
-    const innerSpecial = unescapeMarkup(annRaw2);
-    const outerUnderline = underlinePattern(outerSpecial, op);
-    const innerUnderline = underlinePattern(innerSpecial, op2);
-    const outerBouten = outerSpecial === BOUTEN_PATTERN;
-    const innerBouten = innerSpecial === BOUTEN_PATTERN;
-
-    if (outerBouten && innerBouten) return renderBoutenBoth(baseHtml, options);
-    if (outerBouten && innerUnderline) {
-      return `<span class="${className(options, "bouten")} ${className(options, "bouten-over")} ${underlineClass(options, innerUnderline)}"${attrStyle(`${STYLE_BOUTEN_OVER};${underlineStyle(innerUnderline)}`, options)}>${baseHtml}</span>`;
-    }
-    if (outerUnderline && innerBouten) {
-      return `<span class="${className(options, "bouten")} ${className(options, "bouten-over")} ${underlineClass(options, outerUnderline)}"${attrStyle(`${STYLE_BOUTEN_OVER};${underlineStyle(outerUnderline)}`, options)}>${baseHtml}</span>`;
-    }
-    if (outerBouten) {
-      return renderRubyWithDecoration(baseHtml, escapedText(annRaw2), op2, op, "bouten", null, options);
-    }
-    if (innerBouten) {
-      return renderRubyWithDecoration(baseHtml, escapedText(annRaw), op, op2, "bouten", null, options);
-    }
-    if (outerUnderline) {
-      return renderRubyWithDecoration(baseHtml, escapedText(annRaw2), op2, op, "underline", outerUnderline, options);
-    }
-    if (innerUnderline) {
-      return renderRubyWithDecoration(baseHtml, escapedText(annRaw), op, op2, "underline", innerUnderline, options);
-    }
-
-    return renderRubyLevels(baseHtml, plainBase, op, [annRaw, annRaw2], options);
-  }
-
+  const slots: { position: AnnotationPosition; raw: string }[] = [
+    { position: positionForOp(op), raw: levels[0] ?? "" },
+  ];
   if (levels.length >= 2) {
-    const first = unescapeMarkup(levels[0]);
-    const second = unescapeMarkup(levels[1]);
-    const firstBouten = first === BOUTEN_PATTERN;
-    const secondBouten = second === BOUTEN_PATTERN;
-    const firstUnderline = underlinePattern(first, op);
-    const secondUnderline = underlinePattern(second, opposite(op));
-
-    if (firstBouten && secondBouten) return renderBoutenBoth(baseHtml, options);
-    if (firstBouten && secondUnderline) {
-      return `<span class="${className(options, "bouten")} ${className(options, `bouten-${positionForOp(op)}`)} ${underlineClass(options, secondUnderline)}"${attrStyle(`${boutenStyle(positionForOp(op))};${underlineStyle(secondUnderline)}`, options)}>${baseHtml}</span>`;
-    }
-    if (secondBouten && firstUnderline) {
-      return `<span class="${className(options, "bouten")} ${className(options, `bouten-${positionForOp(opposite(op))}`)} ${underlineClass(options, firstUnderline)}"${attrStyle(`${boutenStyle(positionForOp(opposite(op)))};${underlineStyle(firstUnderline)}`, options)}>${baseHtml}</span>`;
-    }
-    if (firstBouten) {
-      return renderRubyWithDecoration(baseHtml, escapedText(levels[1]), opposite(op), op, "bouten", null, options);
-    }
-    if (secondBouten) {
-      return renderRubyWithDecoration(baseHtml, escapedText(levels[0]), op, opposite(op), "bouten", null, options);
-    }
-    if (firstUnderline) {
-      return renderRubyWithDecoration(baseHtml, escapedText(levels[1]), opposite(op), op, "underline", firstUnderline, options);
-    }
-    if (secondUnderline) {
-      return renderRubyWithDecoration(baseHtml, escapedText(levels[0]), op, opposite(op), "underline", secondUnderline, options);
-    }
+    slots.push({ position: positionForOp(opposite(op)), raw: levels[1] });
+  } else if (op2 !== null && annRaw2 !== null) {
+    slots.push({ position: positionForOp(op2), raw: annRaw2 });
   }
 
-  const only = unescapeMarkup(levels[0] ?? "");
-  if (only === BOUTEN_PATTERN) return renderBouten(baseHtml, positionForOp(op), options);
-  const underline = underlinePattern(only, op);
-  if (underline) return renderUnderline(baseHtml, underline, options);
+  const classified = slots.map((slot) => classifySlot(slot.raw, slot.position));
+  const decorations = classified.filter((s): s is DecorationSlot => s.kind !== "ruby");
+  const rubies = classified.filter((s): s is { kind: "ruby"; raw: string } => s.kind === "ruby");
 
-  return renderRubyLevels(baseHtml, plainBase, op, levels, options);
+  // Pure decoration(s): bouten and/or over/under lines, no ruby text.
+  if (rubies.length === 0) {
+    return renderDecorations(baseHtml, decorations, options);
+  }
+
+  // One ruby slot paired with one decoration slot (e.g. ruby above + underline
+  // below). The slot positions carry the side, so this stays correct whichever
+  // operator order the author used.
+  if (rubies.length === 1 && decorations.length === 1) {
+    const ruby = rubies[0];
+    const rubyPosition = slots[classified.indexOf(ruby)].position;
+    return renderRubyWithDecoration(baseHtml, escapedText(ruby.raw), rubyPosition, decorations[0], options);
+  }
+
+  // One or two ruby slots: defer to the ruby renderer, which handles space
+  // alignment and nested two-level ruby. Slot index 0 is the operator's own
+  // position (inner), index 1 the opposite (outer) — the order renderRubyLevels
+  // expects.
+  return renderRubyLevels(baseHtml, plainBase, op, rubies.map((r) => r.raw), options);
 }
 
 function parseBracketedAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationMatch | null {
@@ -434,11 +444,15 @@ function parseBracketedAt(input: string, start: number, max: number, options: Re
   const annEnd = findCloseParen(input, annStart, max);
   if (annEnd < 0 || annEnd === annStart) return null;
 
+  const ann = input.slice(annStart, annEnd);
   let end = annEnd + 1;
   let op2: AnnotationOp | null = null;
   let ann2: string | null = null;
   const nextOp = opAt(input, end, max);
-  if (nextOp && nextOp !== op) {
+  // Only consume a chained operator when the first annotation is single-level.
+  // A pipe-saturated annotation already fills both slots, so a following
+  // operator is over-capacity and is left in the stream to render as text.
+  if (nextOp && nextOp !== op && splitByUnescapedPipe(ann).length === 1) {
     const secondStart = end + 3;
     const secondEnd = findCloseParen(input, secondStart, max);
     if (secondEnd >= 0 && secondEnd > secondStart) {
@@ -448,7 +462,6 @@ function parseBracketedAt(input: string, start: number, max: number, options: Re
     }
   }
 
-  const ann = input.slice(annStart, annEnd);
   const source = input.slice(start, end);
   return {
     start,
@@ -474,11 +487,12 @@ function parseAbbreviatedAt(input: string, start: number, max: number, options: 
       const annEnd = findCloseParen(input, annStart, max);
       if (annEnd < 0 || annEnd === annStart) return null;
 
+      const ann = input.slice(annStart, annEnd);
       let end = annEnd + 1;
       let op2: AnnotationOp | null = null;
       let ann2: string | null = null;
       const nextOp = opAt(input, end, max);
-      if (nextOp && nextOp !== op) {
+      if (nextOp && nextOp !== op && splitByUnescapedPipe(ann).length === 1) {
         const secondStart = end + 3;
         const secondEnd = findCloseParen(input, secondStart, max);
         if (secondEnd >= 0 && secondEnd > secondStart) {
@@ -493,7 +507,7 @@ function parseAbbreviatedAt(input: string, start: number, max: number, options: 
         start,
         end,
         source,
-        html: renderAnnotation(base, op, input.slice(annStart, annEnd), op2, ann2, options),
+        html: renderAnnotation(base, op, ann, op2, ann2, options),
       };
     }
 

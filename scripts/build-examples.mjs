@@ -80,7 +80,7 @@ const beforeAfterHtml = `<!doctype html>
       .rendered p { color: var(--ink); margin: 0; }
 
       /* Canonical Inline Annotation stylesheet (generated from styles/inline-annotation.css). */
-${css.replace(/^/gm, "      ")}
+${css.replace(/^(?=.)/gm, "      ")}
       @media (max-width: 760px) {
         main { width: min(100% - 24px, 980px); padding-top: 28px; }
         section { grid-template-columns: 1fr; }
@@ -289,7 +289,7 @@ const playgroundHtml = `<!doctype html>
       }
 
       /* Canonical Inline Annotation stylesheet. */
-${css.replace(/^/gm, "      ")}
+${css.replace(/^(?=.)/gm, "      ")}
 
       @media (max-width: 820px) {
         main { width: min(100% - 24px, 1180px); }

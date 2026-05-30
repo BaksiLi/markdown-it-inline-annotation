@@ -2,7 +2,7 @@
 
 `markdown-it` support for **Inline Annotation**.
 
-Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dots, underline marks, and two-slot text annotations:
+Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dots, over/under line marks, and two-slot text annotations:
 
 ```markdown
 [漢字]^^(かんじ)
@@ -12,8 +12,10 @@ Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dot
 
 It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https://blog.baksili.codes/markdown-ruby), with the older Logseq plugin treated as the reference implementation for the first compatibility target.
 
-- **[SPEC.md](./SPEC.md)** — the normative grammar, class contract, and compatibility notes.
-- **[docs/ARCHITECTURE_ROADMAP.md](./docs/ARCHITECTURE_ROADMAP.md)** — implementation roadmap and adapter boundary decisions.
+- **[SPEC.md](./SPEC.md)** — the normative syntax (v2), class contract, and compatibility notes.
+- **[docs/ROADMAP.md](./docs/ROADMAP.md)** — implementation roadmap and adapter boundary decisions.
+- **[docs/v2-rationale.md](./docs/v2-rationale.md)** — why v2 differs from v1, migration notes, and core layering.
+- **[docs/SPEC-v1.md](./docs/SPEC-v1.md)** — the archived v1 syntax (implemented by `0.1.x`).
 - **[examples/playground.html](./examples/playground.html)** — a minimal core renderer playground.
 - **[examples/before-after.html](./examples/before-after.html)** — a small visual before/after page.
 
@@ -62,10 +64,11 @@ renderInlineAnnotationsToHtml("[漢字]^^(かんじ)");
 | `[base]^^(over)^_(under)` | chained two-slot annotation |
 | `[[護]^^(まも)れ]^_(プロテゴ)` | nested / partially overlapping annotation |
 | `[漢字]^^(..)` | bouten/emphasis dots above |
-| `[base]^_(.-)` | solid underline |
+| `[base]^_(.-)` | solid underline (under slot) |
 | `[base]^_(.~)` | wavy underline |
 | `[base]^_(.=)` | double underline |
-| `[重要語句]^^(じゅうようごく\|.-)` | ruby plus underline |
+| `[title]^^(.-)` | overline (over slot) |
+| `[重要語句]^^(じゅうようごく\|.-)` | ruby above plus underline below |
 
 Per-character annotation is enabled when space-separated annotation parts match the number of base characters:
 
@@ -126,7 +129,7 @@ This package uses a `markdown-it` inline rule instead of replacing rendered text
 
 The Logseq plugin remains the reference for the current feature set, but Logseq has host-parser limitations around multiple `^^()` forms in one bullet. Those limitations are not part of the Inline Annotation spec.
 
-Annotation slot contents are plain text in v1. Complex Markdown inside the annotated base should use explicit brackets or be handled in a future AST-level adapter.
+Annotation slot contents are plain text. Complex Markdown inside the annotated base should use explicit brackets or be handled in a future AST-level adapter.
 
 ## Design Intent
 

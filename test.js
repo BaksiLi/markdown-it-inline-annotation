@@ -136,10 +136,27 @@ test("bouten plus wavy underline through chaining", () => {
   hasAll(html, ["ia-bouten-over", "ia-underline-wavy", "text-decoration-style:wavy"]);
 });
 
-test("over-slot underline pattern is ruby text", () => {
+test("over-slot line mark is an overline", () => {
   const html = inline("[base]^^(.-)");
+  hasAll(html, ['<span class="ia-overline"', "text-decoration-line:overline"]);
+  hasNone(html, ["<ruby", "ia-underline"]);
+});
+
+test("overline variants", () => {
+  hasAll(inline("[base]^^(.~)"), ["ia-overline-wavy", "text-decoration-style:wavy"]);
+  hasAll(inline("[base]^^(.=)"), ["ia-overline-double", "text-decoration-style:double"]);
+});
+
+test("overline above plus underline below", () => {
+  const html = inline("[base]^^(.-)^_(.~)");
+  hasAll(html, ["ia-overline", "ia-underline ia-underline-wavy", "text-decoration-line:overline"]);
+  hasNone(html, ["<ruby"]);
+});
+
+test("escaped over-slot mark stays ruby text", () => {
+  const html = inline("[base]^^(\\.-)");
   hasAll(html, ["<ruby", "<rt>.-</rt>"]);
-  assert.ok(!html.includes("ia-underline"));
+  hasNone(html, ["ia-overline"]);
 });
 
 test("per-character alignment", () => {
@@ -180,11 +197,11 @@ test("nested bracket span does not discard inner annotation during alignment", (
   hasAll(html, ["<rt>まも</rt>", "<rt>A B</rt>", "れ"]);
 });
 
-test("pipe-saturated annotation consumes later opposite operator", () => {
+test("pipe-saturated annotation leaves later operator as text", () => {
   const html = inline("[李太白]^^(り たい はく|Lǐ Tài Bái)^_(..)");
   hasAll(html, ["<rt>り</rt>", "<rt>たい</rt>", "<rt>はく</rt>", "<rt>Lǐ</rt>", "<rt>Tài</rt>", "<rt>Bái</rt>"]);
   assert.ok(!html.includes("ia-bouten"));
-  assert.ok(!html.includes("^_(..)"));
+  assert.ok(html.includes("^_(..)"));
 });
 
 test("escaped pipe stays literal", () => {

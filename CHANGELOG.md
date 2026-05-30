@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.2.0
+
+Implements Inline Annotation **v2** (see `SPEC.md`; rationale and migration in
+`docs/v2-rationale.md`, archived v1 in `docs/SPEC-v1.md`). v2 is almost a superset
+of v1.
+
+- **Symmetric line marks.** `.-`, `.~`, `.=` now render as an overline in the over
+  slot (`[title]^^(.-)`, classes `ia-overline` / `ia-overline-wavy` / `ia-overline-double`)
+  and an underline in the under slot, instead of being literal ruby text over the
+  base. The only breaking change: escape the leading dot (`[x]^^(\.-)`) for the old
+  literal-text behavior. Over + under line marks combine into a single
+  `text-decoration-line` declaration so both lines render.
+- **Pipe overflow renders as text.** A chained operator after a pipe-saturated
+  annotation (`[a]^^(x|y)^_(z)`) is left in the stream and rendered as literal text
+  instead of being silently dropped.
+- **Alignment is a rendering enhancement.** Documented as non-semantic; the
+  conformance corpus asserts semantics, not per-character DOM, so hosts may render
+  group or per-character ruby and stay conformant.
+- Fix ruby-plus-line mixed rendering placing the ruby on the wrong side
+  (`[語]^^(よみ|.-)` now correctly renders ruby above + underline below).
+- Internal: `renderAnnotation` resolves an expression into positioned slots and
+  classifies each (`ruby` / `bouten` / `line`) before rendering, replacing the
+  branchy decoration handling.
+
 ## 0.1.2
 
 - Add `enableSpaceAlignment` to let integrations disable automatic per-character ruby alignment for space-separated annotations.

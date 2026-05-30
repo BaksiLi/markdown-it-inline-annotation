@@ -65,12 +65,12 @@
       "notContains": ["ia-ruby-double"]
     },
     {
-      "id": "ruby-pipe-saturated-consumes-chain",
+      "id": "ruby-pipe-saturated-passes-through",
       "category": "slots",
-      "name": "pipe-saturated annotation consumes later opposite operator",
+      "name": "pipe-saturated annotation leaves later operator as text",
       "input": "[李太白]^^(り たい はく|Lǐ Tài Bái)^_(..)",
-      "contains": ["<rt>り</rt>", "<rt>たい</rt>", "<rt>はく</rt>", "<rt>Lǐ</rt>", "<rt>Tài</rt>", "<rt>Bái</rt>"],
-      "notContains": ["ia-bouten", "^_(..)"]
+      "contains": ["<rt>り</rt>", "<rt>たい</rt>", "<rt>はく</rt>", "<rt>Lǐ</rt>", "<rt>Tài</rt>", "<rt>Bái</rt>", "^_(..)"],
+      "notContains": ["ia-bouten"]
     },
     {
       "id": "align-per-character",
@@ -134,12 +134,36 @@
       "notContains": ["<ruby"]
     },
     {
-      "id": "decoration-over-underline-pattern-is-text",
+      "id": "decoration-overline-over-slot",
       "category": "decoration",
-      "name": "over-slot underline pattern is ruby text",
+      "name": "over-slot line mark is an overline",
       "input": "[base]^^(.-)",
+      "contains": ["ia-overline", "text-decoration-line:overline"],
+      "notContains": ["<ruby", "ia-underline"]
+    },
+    {
+      "id": "decoration-overline-wavy",
+      "category": "decoration",
+      "name": "wavy overline over slot",
+      "input": "[base]^^(.~)",
+      "contains": ["ia-overline-wavy", "text-decoration-style:wavy"],
+      "notContains": ["<ruby"]
+    },
+    {
+      "id": "decoration-overline-and-underline",
+      "category": "decoration",
+      "name": "overline above plus wavy underline below",
+      "input": "[base]^^(.-)^_(.~)",
+      "contains": ["ia-overline", "ia-underline ia-underline-wavy", "text-decoration-line:overline"],
+      "notContains": ["<ruby"]
+    },
+    {
+      "id": "decoration-mark-escaped-is-text",
+      "category": "decoration",
+      "name": "escaped over-slot mark stays ruby text",
+      "input": "[base]^^(\\.-)",
       "contains": ["<ruby", "<rt>.-</rt>"],
-      "notContains": ["ia-underline"]
+      "notContains": ["ia-overline"]
     },
     {
       "id": "decoration-ruby-plus-underline",

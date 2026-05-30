@@ -191,25 +191,25 @@
        * is a CSS inherited property: a nested over-ruby inside an under-ruby
        * would otherwise inherit `under` and drop both annotations below the base.
        */
-      
+
       ruby.ia-ruby {
         display: ruby;
       }
-      
+
       ruby.ia-ruby rt {
         font-size: 0.6em;
         line-height: 1;
       }
-      
+
       /* Explicit positioning — required to break ruby-position inheritance. */
       ruby.ia-ruby.ia-ruby-over {
         ruby-position: over;
       }
-      
+
       ruby.ia-ruby.ia-ruby-under {
         ruby-position: under;
       }
-      
+
       /* Bouten (emphasis dots) above. */
       span.ia-bouten.ia-bouten-over {
         text-emphasis: filled dot;
@@ -217,13 +217,13 @@
         text-emphasis-position: over right;
         -webkit-text-emphasis-position: over right;
       }
-      
+
       /* Bouten below (dotted underline). */
       span.ia-bouten.ia-bouten-under {
         text-decoration: underline dotted;
         text-underline-offset: 0.15em;
       }
-      
+
       /* Bouten above + below. */
       span.ia-bouten.ia-bouten-over.ia-bouten-under {
         text-emphasis: filled dot;
@@ -233,21 +233,42 @@
         text-decoration: underline dotted;
         text-underline-offset: 0.15em;
       }
-      
-      /* Underline modifiers: .- solid, .~ wavy, .= double. */
+
+      /* Line marks: .- solid, .~ wavy, .= double.
+       * The slot picks the side — over renders as an overline, under as an underline. */
       span.ia-underline {
         text-decoration-line: underline;
         text-underline-offset: 0.15em;
       }
-      
-      .ia-underline-wavy {
+
+      span.ia-overline {
+        text-decoration-line: overline;
+      }
+
+      .ia-underline-wavy,
+      .ia-overline-wavy {
         text-decoration-style: wavy;
       }
-      
-      .ia-underline-double {
+
+      .ia-underline-double,
+      .ia-overline-double {
         text-decoration-style: double;
       }
-      
+
+      /* Both sides at once: a single text-decoration-line must carry both keywords,
+       * otherwise the two declarations collide and one line is dropped. The combined
+       * selectors below outrank the single-side rules above. */
+      span.ia-overline.ia-underline {
+        text-decoration-line: overline underline;
+      }
+
+      span.ia-bouten-under.ia-overline {
+        text-decoration: none;
+        text-decoration-line: overline underline;
+        text-decoration-style: dotted;
+        text-underline-offset: 0.15em;
+      }
+
       /* Ruby annotation combined with a decoration modifier. */
       ruby.ia-ruby-mixed.ia-bouten-over {
         text-emphasis: filled dot;
@@ -255,17 +276,21 @@
         text-emphasis-position: over right;
         -webkit-text-emphasis-position: over right;
       }
-      
+
       ruby.ia-ruby-mixed.ia-bouten-under {
         text-decoration: underline dotted;
         text-underline-offset: 0.15em;
       }
-      
+
       ruby.ia-ruby-mixed.ia-underline {
         text-decoration-line: underline;
         text-underline-offset: 0.15em;
       }
-      
+
+      ruby.ia-ruby-mixed.ia-overline {
+        text-decoration-line: overline;
+      }
+
 
       @media (max-width: 820px) {
         main { width: min(100% - 24px, 1180px); }
@@ -367,9 +392,9 @@
                 "input": "[base]^^(a)^^(b)"
         },
         {
-                "id": "ruby-pipe-saturated-consumes-chain",
+                "id": "ruby-pipe-saturated-passes-through",
                 "category": "slots",
-                "name": "pipe-saturated annotation consumes later opposite operator",
+                "name": "pipe-saturated annotation leaves later operator as text",
                 "input": "[李太白]^^(り たい はく|Lǐ Tài Bái)^_(..)"
         },
         {
@@ -421,10 +446,28 @@
                 "input": "[base]^_(.~)"
         },
         {
-                "id": "decoration-over-underline-pattern-is-text",
+                "id": "decoration-overline-over-slot",
                 "category": "decoration",
-                "name": "over-slot underline pattern is ruby text",
+                "name": "over-slot line mark is an overline",
                 "input": "[base]^^(.-)"
+        },
+        {
+                "id": "decoration-overline-wavy",
+                "category": "decoration",
+                "name": "wavy overline over slot",
+                "input": "[base]^^(.~)"
+        },
+        {
+                "id": "decoration-overline-and-underline",
+                "category": "decoration",
+                "name": "overline above plus wavy underline below",
+                "input": "[base]^^(.-)^_(.~)"
+        },
+        {
+                "id": "decoration-mark-escaped-is-text",
+                "category": "decoration",
+                "name": "escaped over-slot mark stays ruby text",
+                "input": "[base]^^(\\.-)"
         },
         {
                 "id": "decoration-ruby-plus-underline",
