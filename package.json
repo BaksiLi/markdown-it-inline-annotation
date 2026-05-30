@@ -9,6 +9,7 @@
     "dist",
     "styles",
     "fixtures",
+    "docs",
     "SPEC.md",
     "CHANGELOG.md",
     "examples"

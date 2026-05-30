@@ -13,6 +13,7 @@ Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dot
 It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https://blog.baksili.codes/markdown-ruby), with the older Logseq plugin treated as the reference implementation for the first compatibility target.
 
 - **[SPEC.md](./SPEC.md)** — the normative grammar, class contract, and compatibility notes.
+- **[docs/ARCHITECTURE_ROADMAP.md](./docs/ARCHITECTURE_ROADMAP.md)** — implementation roadmap and adapter boundary decisions.
 - **[examples/playground.html](./examples/playground.html)** — a minimal core renderer playground.
 - **[examples/before-after.html](./examples/before-after.html)** — a small visual before/after page.
 
@@ -20,10 +21,10 @@ It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https:
 
 | Project | Status | Notes |
 | --- | --- | --- |
-| [logseq-furigana-ruby](https://github.com/BaksiLi/logseq-furigana-ruby) | Reference implementation | Mature Logseq plugin; includes macros and conversion commands for Logseq-specific parser conflicts. |
 | `markdown-it-inline-annotation` | Current package | Portable markdown-it adapter backed by the shared Inline Annotation core. |
-| [vscode-inline-annotation](https://github.com/BaksiLi/vscode-inline-annotation) | Published | Preview-only adapter on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation); uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
-| Obsidian plugin | Planned | Expected to start with a reading-view postprocessor using the same core. |
+| [logseq-furigana-ruby](https://github.com/BaksiLi/logseq-furigana-ruby) | Published | Mature Logseq plugin; includes macros and conversion commands for Logseq-specific parser conflicts. |
+| [vscode-inline-annotation](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | Published | Preview-only adapter ; uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
+| [obsidian-inline-annotation](https://github.com/BaksiLi/obsidian-inline-annotation) | Reading view prototype | Obsidian reading-view postprocessor using the shared core; Live Preview deferred. |
 | remark/unified adapter | Planned later | Should use the spec and shared fixtures once the syntax is stable across markdown-it and Obsidian. |
 
 ## Install
