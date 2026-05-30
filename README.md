@@ -25,7 +25,7 @@ for a small visual before/after page.
 | `markdown-it-inline-annotation` | Current package | Portable markdown-it adapter backed by the shared Inline Annotation core. |
 | Obsidian plugin | Planned | Expected to start with a reading-view postprocessor using the same core. |
 | remark/unified adapter | Planned later | Should use the spec and shared fixtures once the syntax is stable across markdown-it and Obsidian. |
-| VS Code extension | Possible later | Better as a downstream integration after the package and Obsidian behavior settle. |
+| [vscode-inline-annotation](https://github.com/BaksiLi/vscode-inline-annotation) | In progress | Preview-only adapter using VS Code's `extendMarkdownIt` hook; no preview scripts or external resources. |
 
 ## Install
 
