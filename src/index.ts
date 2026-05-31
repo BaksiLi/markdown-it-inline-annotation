@@ -3,7 +3,6 @@ import {
   findInlineAnnotation,
   findInlineAnnotationBeforeMarkdown,
   hasInlineAnnotation,
-  inlineAnnotationDefaults,
   renderInlineAnnotationsToHtml,
   type InlineAnnotationOptions,
 } from "./core";
@@ -16,7 +15,7 @@ function pushText(state: any, content: string): void {
   token.content = content;
 }
 
-function createInlineAnnotationRule(options: Required<InlineAnnotationOptions>) {
+function createInlineAnnotationRule(options: InlineAnnotationOptions) {
   return function inlineAnnotationRule(state: any, silent: boolean): boolean {
     const match = findInlineAnnotationBeforeMarkdown(state.src, state.pos, state.posMax, options);
     if (!match) return false;
@@ -35,8 +34,7 @@ function createInlineAnnotationRule(options: Required<InlineAnnotationOptions>) 
 }
 
 export function inlineAnnotationPlugin(md: MarkdownIt, options?: MarkdownItInlineAnnotationOptions): void {
-  const resolved = { ...inlineAnnotationDefaults, ...options };
-  md.inline.ruler.before("text", "inline_annotation", createInlineAnnotationRule(resolved));
+  md.inline.ruler.before("text", "inline_annotation", createInlineAnnotationRule(options ?? {}));
 }
 
 export default inlineAnnotationPlugin;
@@ -45,10 +43,12 @@ export {
   findInlineAnnotation,
   findInlineAnnotationBeforeMarkdown,
   hasInlineAnnotation,
+  inlineAnnotationDefaults,
   renderInlineAnnotationsToHtml,
   type InlineAnnotationOptions,
   type InlineAnnotationMatch,
   type AnnotationOp,
   type AnnotationPosition,
+  type SpaceAlignmentPolicy,
   type UnderlineStyle,
 } from "./core";

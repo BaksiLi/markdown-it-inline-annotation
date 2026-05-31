@@ -171,6 +171,24 @@ test("space alignment can be disabled", () => {
   assert.equal((html.match(/<rt>/g) || []).length, 1);
 });
 
+test("space alignment can be set to off", () => {
+  const html = inline("[春夏秋冬]^^(はる なつ あき ふゆ)", { spaceAlignment: "off" });
+  hasAll(html, ["春夏秋冬", "<rt>はる なつ あき ふゆ</rt>"]);
+  assert.equal((html.match(/<rt>/g) || []).length, 1);
+});
+
+test("auto space alignment keeps plain ASCII glosses grouped", () => {
+  const html = inline("[真值]^^(Truth Value)", { spaceAlignment: "auto" });
+  hasAll(html, ["真值", "<rt>Truth Value</rt>"]);
+  assert.equal((html.match(/<rt>/g) || []).length, 1);
+});
+
+test("auto space alignment keeps phonetic readings per character", () => {
+  const html = inline("[取り返す]^^(と り かえ す)", { spaceAlignment: "auto" });
+  hasAll(html, ["<rt>と</rt>", "り<rp>(</rp><rt></rt>", "<rt>かえ</rt>", "す<rp>(</rp><rt></rt>"]);
+  assert.equal((html.match(/<ruby/g) || []).length, 4);
+});
+
 test("two-level per-character alignment", () => {
   const html = inline("[李太白]^^(Lǐ Tài Bái|ㄌㄧˇ ㄊㄞˋ ㄅㄞˊ)");
   hasAll(html, ["<rt>Lǐ</rt>", "<rt>Tài</rt>", "<rt>Bái</rt>", "<rt>ㄌㄧˇ</rt>", "<rt>ㄊㄞˋ</rt>", "<rt>ㄅㄞˊ</rt>"]);

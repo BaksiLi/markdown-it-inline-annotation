@@ -1,10 +1,12 @@
 export type AnnotationOp = "^^" | "^_";
 export type AnnotationPosition = "over" | "under";
+export type SpaceAlignmentPolicy = "always" | "auto" | "off";
 export type UnderlineStyle = "solid" | "wavy" | "double";
 
 export interface InlineAnnotationOptions {
   classPrefix?: string;
   enableAbbreviated?: boolean;
+  spaceAlignment?: SpaceAlignmentPolicy;
   enableSpaceAlignment?: boolean;
   inlineStyles?: boolean;
   fallbackParens?: string;
@@ -20,7 +22,7 @@ export interface InlineAnnotationMatch {
 interface ResolvedOptions {
   classPrefix: string;
   enableAbbreviated: boolean;
-  enableSpaceAlignment: boolean;
+  spaceAlignment: SpaceAlignmentPolicy;
   inlineStyles: boolean;
   fallbackParens: string;
 }
@@ -28,7 +30,7 @@ interface ResolvedOptions {
 const DEFAULT_OPTIONS: ResolvedOptions = {
   classPrefix: "ia",
   enableAbbreviated: true,
-  enableSpaceAlignment: true,
+  spaceAlignment: "always",
   inlineStyles: true,
   fallbackParens: "()",
 };
@@ -47,7 +49,17 @@ const STYLE_RUBY_OVER = "ruby-position:over";
 const STYLE_RUBY_UNDER = "ruby-position:under";
 
 function resolveOptions(options?: InlineAnnotationOptions): ResolvedOptions {
-  return { ...DEFAULT_OPTIONS, ...options };
+  const resolved: ResolvedOptions = {
+    classPrefix: options?.classPrefix ?? DEFAULT_OPTIONS.classPrefix,
+    enableAbbreviated: options?.enableAbbreviated ?? DEFAULT_OPTIONS.enableAbbreviated,
+    spaceAlignment: options?.spaceAlignment ?? DEFAULT_OPTIONS.spaceAlignment,
+    inlineStyles: options?.inlineStyles ?? DEFAULT_OPTIONS.inlineStyles,
+    fallbackParens: options?.fallbackParens ?? DEFAULT_OPTIONS.fallbackParens,
+  };
+  if (!options?.spaceAlignment && typeof options?.enableSpaceAlignment === "boolean") {
+    resolved.spaceAlignment = options.enableSpaceAlignment ? "always" : "off";
+  }
+  return resolved;
 }
 
 function isEscaped(input: string, index: number): boolean {
@@ -168,6 +180,21 @@ function splitBySpaces(text: string): string[] {
   return text.split(/\s+/).filter(Boolean);
 }
 
+function isPlainAsciiWord(text: string): boolean {
+  return /^[A-Za-z][A-Za-z'-]*$/.test(text);
+}
+
+function shouldAlignBySpaces(plainBase: string, parts: string[], options: ResolvedOptions): boolean {
+  if (options.spaceAlignment === "off") return false;
+  const baseChars = Array.from(plainBase);
+  if (parts.length !== baseChars.length) return false;
+  if (options.spaceAlignment === "always") return true;
+
+  // Auto mode is conservative: keep ordinary multi-word glosses such as
+  // "Truth Value" grouped, but still align kana, bopomofo, and marked pinyin.
+  return !parts.every(isPlainAsciiWord);
+}
+
 function shouldHideAnnotation(baseChar: string, annotation: string): boolean {
   return baseChar === annotation;
 }
@@ -285,10 +312,10 @@ function renderRubyLevels(baseHtml: string, plainBase: string, op: AnnotationOp,
   if (capped.length === 2) {
     const raw1 = unescapeMarkup(levels[0]);
     const raw2 = unescapeMarkup(levels[1]);
-    const ann1Parts = options.enableSpaceAlignment && raw1.includes(" ") ? splitBySpaces(raw1) : null;
-    const ann2Parts = options.enableSpaceAlignment && raw2.includes(" ") ? splitBySpaces(raw2) : null;
-    const can1Align = ann1Parts !== null && ann1Parts.length === baseChars.length;
-    const can2Align = ann2Parts !== null && ann2Parts.length === baseChars.length;
+    const ann1Parts = raw1.includes(" ") ? splitBySpaces(raw1) : null;
+    const ann2Parts = raw2.includes(" ") ? splitBySpaces(raw2) : null;
+    const can1Align = ann1Parts !== null && shouldAlignBySpaces(plainBase, ann1Parts, options);
+    const can2Align = ann2Parts !== null && shouldAlignBySpaces(plainBase, ann2Parts, options);
 
     if (can1Align && can2Align) {
       return baseChars
@@ -339,9 +366,9 @@ function renderRubyLevels(baseHtml: string, plainBase: string, op: AnnotationOp,
 
   if (capped.length === 1) {
     const raw = unescapeMarkup(levels[0]);
-    if (options.enableSpaceAlignment && raw.includes(" ")) {
+    if (raw.includes(" ")) {
       const parts = splitBySpaces(raw);
-      if (parts.length === baseChars.length) {
+      if (shouldAlignBySpaces(plainBase, parts, options)) {
         return baseChars
           .map((char, i) => {
             const base = escapeHtml(char);

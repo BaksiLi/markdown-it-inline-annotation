@@ -34,8 +34,12 @@ Per-character vs. group ruby does not change meaning ("annotation X applies to
 base Y"); it is presentation, like font choice. So the conformance contract is
 defined at the semantic level (base↔annotation association + `ia-*` classes) and
 does **not** assert per-character DOM. Both renderings are conformant, and the
-option becomes a presentation preference (default on, uniform). This dissolves
-"same source, different meaning" because alignment was never meaning.
+option becomes a presentation preference. A renderer may choose an `"always"`
+policy for compatibility, an `"off"` policy for prose-heavy notes, or a
+conservative `"auto"` policy that aligns phonetic readings such as
+`[取り返す]^^(と り かえ す)` while leaving plain ASCII glosses such as
+`[真值]^^(Truth Value)` grouped. This dissolves "same source, different meaning"
+because alignment was never meaning.
 
 **Rejected alternative:** a `^^(=Truth Value)` opt-out to force a grouped gloss.
 It patches an already-implicit behavior (space being load-bearing) and adds a
@@ -59,7 +63,8 @@ parse:   source -> AnnotationModel { base, slots: [{ position, kind, value }] }
                    (kind = "ruby" | "mark"; no alignment, no layout)
 render:  AnnotationModel + options -> HTML
            - align(base, annotation) is an isolated, deterministic function
-           - applied only when kind === "ruby" and enableSpaceAlignment
+           - applied only when kind === "ruby" and the renderer's alignment
+             policy allows it
            - marks render via the symmetric glyph table
 ```
 

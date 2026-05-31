@@ -82,8 +82,8 @@ renders ruby text ".-" above `x`.
 
 Space alignment is a **rendering enhancement**, not part of the structural
 contract. It never changes meaning — only layout — so a renderer may apply it or
-not, and both results are conformant. Implementations expose it as a single
-option (`enableSpaceAlignment`, default on).
+not, and both results are conformant. Implementations may expose it as a
+rendering policy (`spaceAlignment`: `"always"`, `"auto"`, or `"off"`).
 
 When enabled and a slot annotation is space-separated with a part count equal to
 the base character count, the renderer splits the base into per-character ruby:
@@ -105,6 +105,10 @@ annotation markup. Because alignment is non-semantic, the same source may render
 as per-character ruby in one host and group ruby in another (e.g. an academic
 note configuration that prefers multi-word glosses); the base↔annotation
 association and `ia-*` classes stay identical.
+
+An `"auto"` policy should be conservative. For example,
+`[取り返す]^^(と り かえ す)` is a good candidate for per-character layout, while
+`[真值]^^(Truth Value)` should usually remain group ruby.
 
 ## Nested Spans
 

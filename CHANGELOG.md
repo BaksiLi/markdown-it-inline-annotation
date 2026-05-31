@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1
+
+- Add `spaceAlignment` rendering policy: `"always"` keeps the existing
+  per-character behavior, `"off"` always renders group ruby, and `"auto"` keeps
+  plain ASCII glosses grouped while preserving phonetic per-character readings
+  such as `[取り返す]^^(と り かえ す)`.
+- Keep the older `enableSpaceAlignment` boolean as a compatibility alias.
+
 ## 0.2.0
 
 Implements Inline Annotation **v2** (see `SPEC.md`; rationale and migration in

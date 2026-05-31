@@ -82,15 +82,19 @@ Per-character annotation is enabled when space-separated annotation parts match 
 md.use(inlineAnnotationPlugin, {
   classPrefix: "ia",
   enableAbbreviated: true,
-  enableSpaceAlignment: true,
+  spaceAlignment: "always",
   inlineStyles: true,
   fallbackParens: "()",
 });
 ```
 
-Set `enableSpaceAlignment: false` if multi-word glosses such as
-`[真值]^^(Truth Value)` should always render as group ruby instead of being
-auto-aligned by spaces. The default keeps per-character ruby enabled.
+Set `spaceAlignment: "off"` if multi-word glosses such as `[真值]^^(Truth Value)`
+should always render as group ruby instead of being auto-aligned by spaces. Use
+`spaceAlignment: "auto"` for conservative per-character layout: phonetic
+readings such as `[取り返す]^^(と り かえ す)` align, while plain ASCII glosses
+stay grouped. The default, `"always"`, preserves the original behavior.
+
+The older `enableSpaceAlignment` boolean is still supported for compatibility.
 
 ## Styling
 
