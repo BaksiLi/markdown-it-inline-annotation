@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Add a reusable annotation model API for editor adapters:
+  `findInlineAnnotationModel`, `findInlineAnnotationModelBeforeMarkdown`, and
+  `renderInlineAnnotationModelToHtml`.
+- Expose source ranges for the whole expression, base, and positioned slots, so
+  hosts such as Obsidian Live Preview can build decorations without reparsing
+  generated HTML.
+- Keep the existing HTML renderer and markdown-it plugin backed by the same
+  model path.
+
 ## 0.2.1
 
 - Add `spaceAlignment` rendering policy: `"always"` keeps the existing

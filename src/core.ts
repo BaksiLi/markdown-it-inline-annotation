@@ -12,11 +12,36 @@ export interface InlineAnnotationOptions {
   fallbackParens?: string;
 }
 
+export type InlineAnnotationForm = "bracketed" | "abbreviated";
+export type InlineAnnotationSlotSource = "primary" | "pipe" | "chain";
+
+export interface InlineAnnotationRange {
+  start: number;
+  end: number;
+  raw: string;
+}
+
+export interface InlineAnnotationSlot extends InlineAnnotationRange {
+  position: AnnotationPosition;
+  source: InlineAnnotationSlotSource;
+}
+
+export interface InlineAnnotationModel {
+  form: InlineAnnotationForm;
+  start: number;
+  end: number;
+  source: string;
+  base: InlineAnnotationRange;
+  primaryOp: AnnotationOp;
+  slots: InlineAnnotationSlot[];
+}
+
 export interface InlineAnnotationMatch {
   start: number;
   end: number;
   html: string;
   source: string;
+  model: InlineAnnotationModel;
 }
 
 interface ResolvedOptions {
@@ -96,6 +121,19 @@ function splitByUnescapedPipe(input: string): string[] {
     }
   }
   parts.push(buf);
+  return parts;
+}
+
+function splitByUnescapedPipeWithRanges(input: string, offset: number): InlineAnnotationRange[] {
+  const parts: InlineAnnotationRange[] = [];
+  let partStart = 0;
+  for (let i = 0; i < input.length; i++) {
+    if (input[i] === "|" && !isEscaped(input, i)) {
+      parts.push({ start: offset + partStart, end: offset + i, raw: input.slice(partStart, i) });
+      partStart = i + 1;
+    }
+  }
+  parts.push({ start: offset + partStart, end: offset + input.length, raw: input.slice(partStart) });
   return parts;
 }
 
@@ -417,28 +455,18 @@ function stripInlineAnnotationMarkup(input: string, options: ResolvedOptions): s
   return plain;
 }
 
-function renderAnnotation(baseRaw: string, op: AnnotationOp, annRaw: string, op2: AnnotationOp | null, annRaw2: string | null, options: ResolvedOptions): string {
+export function renderInlineAnnotationModelToHtml(model: InlineAnnotationModel, rawOptions?: InlineAnnotationOptions): string {
+  const options = resolveOptions(rawOptions);
+  const baseRaw = model.base.raw;
   const baseHtml = renderInlineAnnotationsToHtml(baseRaw, options);
   const plainBase = hasInlineAnnotation(baseRaw) ? "" : stripInlineAnnotationMarkup(baseRaw, options);
-
-  // Resolve the expression into at most two positioned slots (over + under).
-  // Pipe notation fills both slots through one operator; a distinct chained
-  // operator fills the opposite slot. The parser only forwards a chained
-  // operator when the first annotation is single-level, so capacity (2) is
-  // never exceeded here — over-capacity input is left in the stream as text.
-  const levels = splitByUnescapedPipe(annRaw);
-  const slots: { position: AnnotationPosition; raw: string }[] = [
-    { position: positionForOp(op), raw: levels[0] ?? "" },
-  ];
-  if (levels.length >= 2) {
-    slots.push({ position: positionForOp(opposite(op)), raw: levels[1] });
-  } else if (op2 !== null && annRaw2 !== null) {
-    slots.push({ position: positionForOp(op2), raw: annRaw2 });
-  }
-
-  const classified = slots.map((slot) => classifySlot(slot.raw, slot.position));
-  const decorations = classified.filter((s): s is DecorationSlot => s.kind !== "ruby");
-  const rubies = classified.filter((s): s is { kind: "ruby"; raw: string } => s.kind === "ruby");
+  const classified = model.slots.map((slot) => ({ slot, value: classifySlot(slot.raw, slot.position) }));
+  const decorations = classified
+    .map(({ value }) => value)
+    .filter((slot): slot is DecorationSlot => slot.kind !== "ruby");
+  const rubies = classified.filter((entry): entry is { slot: InlineAnnotationSlot; value: { kind: "ruby"; raw: string } } => {
+    return entry.value.kind === "ruby";
+  });
 
   // Pure decoration(s): bouten and/or over/under lines, no ruby text.
   if (rubies.length === 0) {
@@ -450,18 +478,30 @@ function renderAnnotation(baseRaw: string, op: AnnotationOp, annRaw: string, op2
   // operator order the author used.
   if (rubies.length === 1 && decorations.length === 1) {
     const ruby = rubies[0];
-    const rubyPosition = slots[classified.indexOf(ruby)].position;
-    return renderRubyWithDecoration(baseHtml, escapedText(ruby.raw), rubyPosition, decorations[0], options);
+    return renderRubyWithDecoration(baseHtml, escapedText(ruby.value.raw), ruby.slot.position, decorations[0], options);
   }
 
   // One or two ruby slots: defer to the ruby renderer, which handles space
   // alignment and nested two-level ruby. Slot index 0 is the operator's own
   // position (inner), index 1 the opposite (outer) — the order renderRubyLevels
   // expects.
-  return renderRubyLevels(baseHtml, plainBase, op, rubies.map((r) => r.raw), options);
+  return renderRubyLevels(baseHtml, plainBase, model.primaryOp, rubies.map((ruby) => ruby.value.raw), options);
 }
 
-function parseBracketedAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationMatch | null {
+function createSlots(op: AnnotationOp, ann: string, annStart: number, op2: AnnotationOp | null, ann2: InlineAnnotationRange | null): InlineAnnotationSlot[] {
+  const levels = splitByUnescapedPipeWithRanges(ann, annStart);
+  const slots: InlineAnnotationSlot[] = [
+    { ...levels[0], position: positionForOp(op), source: "primary" },
+  ];
+  if (levels.length >= 2) {
+    slots.push({ ...levels[1], position: positionForOp(opposite(op)), source: "pipe" });
+  } else if (op2 !== null && ann2 !== null) {
+    slots.push({ ...ann2, position: positionForOp(op2), source: "chain" });
+  }
+  return slots;
+}
+
+function parseBracketedAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationModel | null {
   if (input[start] !== "[" || isEscaped(input, start)) return null;
   const close = findBracketClose(input, start, max);
   if (close < 0) return null;
@@ -474,7 +514,7 @@ function parseBracketedAt(input: string, start: number, max: number, options: Re
   const ann = input.slice(annStart, annEnd);
   let end = annEnd + 1;
   let op2: AnnotationOp | null = null;
-  let ann2: string | null = null;
+  let ann2: InlineAnnotationRange | null = null;
   const nextOp = opAt(input, end, max);
   // Only consume a chained operator when the first annotation is single-level.
   // A pipe-saturated annotation already fills both slots, so a following
@@ -484,17 +524,20 @@ function parseBracketedAt(input: string, start: number, max: number, options: Re
     const secondEnd = findCloseParen(input, secondStart, max);
     if (secondEnd >= 0 && secondEnd > secondStart) {
       op2 = nextOp;
-      ann2 = input.slice(secondStart, secondEnd);
+      ann2 = { start: secondStart, end: secondEnd, raw: input.slice(secondStart, secondEnd) };
       end = secondEnd + 1;
     }
   }
 
   const source = input.slice(start, end);
   return {
+    form: "bracketed",
     start,
     end,
     source,
-    html: renderAnnotation(input.slice(start + 1, close), op, ann, op2, ann2, options),
+    base: { start: start + 1, end: close, raw: input.slice(start + 1, close) },
+    primaryOp: op,
+    slots: createSlots(op, ann, annStart, op2, ann2),
   };
 }
 
@@ -502,7 +545,7 @@ function isAbbreviatedBoundary(ch: string | undefined): boolean {
   return ch === undefined || /\s/.test(ch) || "[]()<>`*&!".includes(ch);
 }
 
-function parseAbbreviatedAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationMatch | null {
+function parseAbbreviatedAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationModel | null {
   if (!options.enableAbbreviated || isAbbreviatedBoundary(input[start]) || input[start] === "^") return null;
 
   for (let i = start + 1; i < max; i++) {
@@ -517,24 +560,27 @@ function parseAbbreviatedAt(input: string, start: number, max: number, options: 
       const ann = input.slice(annStart, annEnd);
       let end = annEnd + 1;
       let op2: AnnotationOp | null = null;
-      let ann2: string | null = null;
+      let ann2: InlineAnnotationRange | null = null;
       const nextOp = opAt(input, end, max);
       if (nextOp && nextOp !== op && splitByUnescapedPipe(ann).length === 1) {
         const secondStart = end + 3;
         const secondEnd = findCloseParen(input, secondStart, max);
         if (secondEnd >= 0 && secondEnd > secondStart) {
           op2 = nextOp;
-          ann2 = input.slice(secondStart, secondEnd);
+          ann2 = { start: secondStart, end: secondEnd, raw: input.slice(secondStart, secondEnd) };
           end = secondEnd + 1;
         }
       }
 
       const source = input.slice(start, end);
       return {
+        form: "abbreviated",
         start,
         end,
         source,
-        html: renderAnnotation(base, op, ann, op2, ann2, options),
+        base: { start, end: i, raw: base },
+        primaryOp: op,
+        slots: createSlots(op, ann, annStart, op2, ann2),
       };
     }
 
@@ -544,7 +590,7 @@ function parseAbbreviatedAt(input: string, start: number, max: number, options: 
   return null;
 }
 
-function parseAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationMatch | null {
+function parseAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationModel | null {
   return parseBracketedAt(input, start, max, options) ?? parseAbbreviatedAt(input, start, max, options);
 }
 
@@ -552,29 +598,54 @@ function isMarkdownBlocker(ch: string): boolean {
   return ch === "`" || ch === "*" || ch === "_" || ch === "<" || ch === "&" || ch === "!" || ch === "\n" || ch === "\r";
 }
 
-function findInlineAnnotationIn(
+function findInlineAnnotationModelIn(
   input: string,
   start: number,
   max: number,
   rawOptions: InlineAnnotationOptions | undefined,
   stopBeforeMarkdown: boolean
-): InlineAnnotationMatch | null {
+): InlineAnnotationModel | null {
   const options = resolveOptions(rawOptions);
   for (let i = start; i < max; i++) {
-    const match = parseAt(input, i, max, options);
-    if (match) return match;
+    const model = parseAt(input, i, max, options);
+    if (model) return model;
     if (stopBeforeMarkdown && input[i] === "[" && !isEscaped(input, i)) return null;
     if (stopBeforeMarkdown && isMarkdownBlocker(input[i])) return null;
   }
   return null;
 }
 
+function matchFromModel(model: InlineAnnotationModel, options: InlineAnnotationOptions | undefined): InlineAnnotationMatch {
+  return {
+    start: model.start,
+    end: model.end,
+    source: model.source,
+    html: renderInlineAnnotationModelToHtml(model, options),
+    model,
+  };
+}
+
+export function findInlineAnnotationModel(input: string, start = 0, max = input.length, rawOptions?: InlineAnnotationOptions): InlineAnnotationModel | null {
+  return findInlineAnnotationModelIn(input, start, max, rawOptions, false);
+}
+
+export function findInlineAnnotationModelBeforeMarkdown(
+  input: string,
+  start = 0,
+  max = input.length,
+  rawOptions?: InlineAnnotationOptions
+): InlineAnnotationModel | null {
+  return findInlineAnnotationModelIn(input, start, max, rawOptions, true);
+}
+
 export function findInlineAnnotation(input: string, start = 0, max = input.length, rawOptions?: InlineAnnotationOptions): InlineAnnotationMatch | null {
-  return findInlineAnnotationIn(input, start, max, rawOptions, false);
+  const model = findInlineAnnotationModel(input, start, max, rawOptions);
+  return model ? matchFromModel(model, rawOptions) : null;
 }
 
 export function findInlineAnnotationBeforeMarkdown(input: string, start = 0, max = input.length, rawOptions?: InlineAnnotationOptions): InlineAnnotationMatch | null {
-  return findInlineAnnotationIn(input, start, max, rawOptions, true);
+  const model = findInlineAnnotationModelBeforeMarkdown(input, start, max, rawOptions);
+  return model ? matchFromModel(model, rawOptions) : null;
 }
 
 export function renderInlineAnnotationsToHtml(input: string, rawOptions?: InlineAnnotationOptions): string {

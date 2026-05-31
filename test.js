@@ -4,7 +4,9 @@ const MarkdownIt = require("markdown-it");
 const {
   inlineAnnotationPlugin,
   renderInlineAnnotationsToHtml,
+  renderInlineAnnotationModelToHtml,
   findInlineAnnotation,
+  findInlineAnnotationModel,
 } = require("./dist/index.js");
 const htmlRenderFixtureCorpus = require("./fixtures/html-render.json");
 
@@ -311,12 +313,45 @@ test("findInlineAnnotation returns source range", () => {
   assert.ok(match);
   assert.equal(match.start, 4);
   assert.equal(match.source, "[漢字]^^(かんじ)");
+  assert.equal(match.model.base.raw, "漢字");
+  assert.equal(match.model.slots[0].raw, "かんじ");
+});
+
+test("findInlineAnnotationModel exposes positioned slots", () => {
+  const model = findInlineAnnotationModel("pre [base]^_(under)^^(over)", 0);
+  assert.ok(model);
+  assert.equal(model.form, "bracketed");
+  assert.equal(model.base.raw, "base");
+  assert.equal(model.primaryOp, "^_");
+  assert.deepEqual(
+    model.slots.map((slot) => [slot.position, slot.source, slot.raw]),
+    [
+      ["under", "primary", "under"],
+      ["over", "chain", "over"],
+    ]
+  );
+});
+
+test("model renderer matches inline match HTML", () => {
+  const match = findInlineAnnotation("[重要語句]^^(じゅうようごく|.-)");
+  assert.ok(match);
+  assert.equal(renderInlineAnnotationModelToHtml(match.model), match.html);
+});
+
+test("pipe-saturated model leaves chained overflow outside range", () => {
+  const source = "[李太白]^^(り たい はく|Lǐ Tài Bái)^_(..)";
+  const model = findInlineAnnotationModel(source);
+  assert.ok(model);
+  assert.equal(model.source, "[李太白]^^(り たい はく|Lǐ Tài Bái)");
+  assert.equal(source.slice(model.end), "^_(..)");
+  assert.equal(model.slots.length, 2);
 });
 
 test("package subpath exports expose core and fixtures", () => {
   const core = require("markdown-it-inline-annotation/core");
   const corpus = require("markdown-it-inline-annotation/fixtures/html-render.json");
   assert.equal(typeof core.renderInlineAnnotationsToHtml, "function");
+  assert.equal(typeof core.findInlineAnnotationModel, "function");
   assert.equal(corpus.version, 1);
   assert.ok(corpus.cases.length > 0);
 });

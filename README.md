@@ -53,6 +53,26 @@ const { renderInlineAnnotationsToHtml } = require("markdown-it-inline-annotation
 renderInlineAnnotationsToHtml("[漢字]^^(かんじ)");
 ```
 
+Editor integrations can use the model API when source ranges matter:
+
+```js
+const {
+  findInlineAnnotationModel,
+  renderInlineAnnotationModelToHtml,
+} = require("markdown-it-inline-annotation/core");
+
+const model = findInlineAnnotationModel("before [漢字]^^(かんじ)");
+if (model) {
+  console.log(model.base.raw); // "漢字"
+  console.log(model.slots[0].position); // "over"
+  console.log(renderInlineAnnotationModelToHtml(model));
+}
+```
+
+The model keeps absolute ranges for the expression, base, and positioned slots.
+That lets Live Preview adapters build editor decorations from the semantic
+structure instead of reparsing generated HTML.
+
 ## Supported Syntax
 
 | Input | Meaning |
