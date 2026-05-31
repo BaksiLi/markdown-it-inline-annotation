@@ -207,6 +207,13 @@ fixtures declare options such as `spaceAlignment: "always"`. Host-specific
 behavior (Logseq slash-command conversion, parser conflicts, editor DOM timing)
 is tested outside this corpus.
 
+### Diagnostics
+
+Future lint and editor diagnostics should use the reserved IDs in
+[`docs/DIAGNOSTICS.md`](./docs/DIAGNOSTICS.md). That taxonomy is advisory; it
+does not require parsers or adapters to implement diagnostics, and it must not
+expand the syntax into host-owned Markdown tokens.
+
 ## Non-Normative Appendices
 
 ### Appendix A: Operator Properties
@@ -235,9 +242,11 @@ through as text (changed from v1, which silently dropped it).
 
 ### Appendix B: Grammar Sketch (EBNF)
 
-This grammar is descriptive. Markdown hosts still decide where inline extension
-rules are allowed to run, and the implementation must also enforce the
-degenerate behavior table above.
+This grammar is descriptive. It sketches the source shape once a host has
+decided that Inline Annotation parsing is allowed at a position. It does not
+require hosts to force parsing inside Markdown links, code spans, raw HTML,
+entities, Obsidian Live Preview tokens, or any other host-owned token stream.
+Implementations must also enforce the degenerate behavior table above.
 
 ```ebnf
 inline-annotation = bracketed-form | abbreviated-form ;

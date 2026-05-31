@@ -6,6 +6,41 @@
     "rendering-policy": "Assertions that depend on a declared renderer policy, such as default space alignment.",
     "host-skip": "Reserved for copied adapter suites when a documented host parser limitation prevents a host from running an otherwise shared case."
   },
+  "fixtureSchema": {
+    "commonRequired": [
+      "id",
+      "category",
+      "name",
+      "assertionType",
+      "input"
+    ],
+    "assertionRequired": "At least one of contains, notContains, or counts is required for executable fixtures.",
+    "byAssertionType": {
+      "semantic": {
+        "required": [],
+        "forbidden": [
+          "options",
+          "hostSkip"
+        ]
+      },
+      "rendering-policy": {
+        "required": [
+          "options"
+        ],
+        "forbidden": [
+          "hostSkip"
+        ]
+      },
+      "host-skip": {
+        "required": [
+          "hostSkip"
+        ],
+        "forbidden": [
+          "options"
+        ]
+      }
+    }
+  },
   "cases": [
     {
       "id": "ruby-basic-over",

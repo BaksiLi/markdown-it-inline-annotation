@@ -12,6 +12,8 @@
   dropping them (`[a]^^(x|y|z)` renders `x`, `y`, and visible `|z`).
 - Classify shared fixtures as `semantic`, `rendering-policy`, or `host-skip`,
   and keep semantic capacity cases independent from space-alignment policy.
+- Add fixture schema metadata, non-normative diagnostic IDs, and explicit
+  checklist coverage for extra pipe overflow (`[a]^^(x|y|z)`).
 - Keep the existing HTML renderer and markdown-it plugin backed by the same
   model path.
 

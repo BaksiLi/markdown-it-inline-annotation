@@ -95,6 +95,8 @@ Three fixture layers:
    semantic fragments / counts, not exact serialized HTML. Cases are classified
    as `semantic`, `rendering-policy`, or `host-skip`; semantic cases must not
    depend on inline styles, class order, or default renderer policy.
+   Checklist coverage includes both overflow forms: chained overflow
+   `[a]^^(x|y)^_(z)` and extra pipe overflow `[a]^^(x|y|z)`.
 2. **Adapter fixtures** — integration behavior (markdown-it parsing, Obsidian
    DOM replacement, remark AST).
 3. **Host workflow fixtures** — host-specific behavior (Logseq macro conversion,
@@ -180,6 +182,10 @@ config churn without catching the parser/adapter risks that matter. Strict
 TypeScript builds plus shared fixture validation are the primary static checks.
 Revisit when shared runtime is extracted, frontend surface grows, or CI needs
 consistent style across multiple packages (i.e. with the monorepo).
+
+Diagnostic IDs are reserved in [`DIAGNOSTICS.md`](./DIAGNOSTICS.md) so future
+lint/editor tooling can converge on names without forcing a lint engine into
+the current core package.
 
 ## Safety Model
 

@@ -14,6 +14,7 @@ It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https:
 
 - **[SPEC.md](./SPEC.md)** — the v2 syntax, class contract, normative requirements, and non-normative guidance.
 - **[docs/ROADMAP.md](./docs/ROADMAP.md)** — implementation roadmap and adapter boundary decisions.
+- **[docs/DIAGNOSTICS.md](./docs/DIAGNOSTICS.md)** — reserved lint/editor diagnostic ids for future tooling.
 - **[docs/v2-rationale.md](./docs/v2-rationale.md)** — why v2 differs from v1, migration notes, and core layering.
 - **[docs/SPEC-v1.md](./docs/SPEC-v1.md)** — the archived v1 syntax (implemented by `0.1.x`).
 - **[examples/playground.html](./examples/playground.html)** — a minimal core renderer playground.

@@ -26,6 +26,16 @@ Fixture fields:
 - `notContains`: fragments that must not appear.
 - `counts`: exact substring counts for portable structural assertions.
 
+Schema rules are also carried in `fixtureSchema` inside the JSON file:
+
+| `assertionType` | Required fields | Forbidden fields | Assertion requirement |
+| --- | --- | --- | --- |
+| `semantic` | common fields | `options`, `hostSkip` | at least one of `contains`, `notContains`, `counts` |
+| `rendering-policy` | common fields, `options` | `hostSkip` | at least one of `contains`, `notContains`, `counts` |
+| `host-skip` | common fields, `hostSkip` | `options` | none; copied adapter suites may keep assertions for context but must not run the case |
+
+Common fields are `id`, `category`, `name`, `assertionType`, and `input`.
+
 Semantic fixtures should avoid asserting inline style strings unless the style
 itself is the behavior under test. Prefer canonical `ia-*` classes and visible
 text fragments so adapters can choose inline styles, stylesheets, or host DOM
