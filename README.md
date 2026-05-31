@@ -12,7 +12,7 @@ Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dot
 
 It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https://blog.baksili.codes/markdown-ruby), with the older Logseq plugin treated as the reference implementation for the first compatibility target.
 
-- **[SPEC.md](./SPEC.md)** — the normative syntax (v2), class contract, and compatibility notes.
+- **[SPEC.md](./SPEC.md)** — the v2 syntax, class contract, normative requirements, and non-normative guidance.
 - **[docs/ROADMAP.md](./docs/ROADMAP.md)** — implementation roadmap and adapter boundary decisions.
 - **[docs/v2-rationale.md](./docs/v2-rationale.md)** — why v2 differs from v1, migration notes, and core layering.
 - **[docs/SPEC-v1.md](./docs/SPEC-v1.md)** — the archived v1 syntax (implemented by `0.1.x`).
@@ -70,7 +70,8 @@ renderInlineAnnotationsToHtml("[漢字]^^(かんじ)");
 | `[title]^^(.-)` | overline (over slot) |
 | `[重要語句]^^(じゅうようごく\|.-)` | ruby above plus underline below |
 
-Per-character annotation is enabled when space-separated annotation parts match the number of base characters:
+With the default renderer policy, per-character annotation is enabled when
+space-separated annotation parts match the number of base characters:
 
 ```markdown
 [春夏秋冬]^^(はる なつ あき ふゆ)
@@ -115,10 +116,13 @@ npm test
 node -e "const MarkdownIt = require('markdown-it'); const { inlineAnnotationPlugin } = require('./dist/index.js'); console.log(new MarkdownIt().use(inlineAnnotationPlugin).render('[漢字]^^(かんじ)'))"
 ```
 
-`npm test` builds the package and runs the shared host-neutral conformance corpus
-from [`fixtures/html-render.json`](./fixtures/html-render.json), plus
-markdown-it-specific integration cases. Host adapters should run the shared
-corpus first, then add adapter or workflow tests separately.
+`npm test` builds the package and runs the shared conformance corpus from
+[`fixtures/html-render.json`](./fixtures/html-render.json), plus
+markdown-it-specific integration cases. The corpus labels assertions as
+`semantic`, `rendering-policy`, or `host-skip` so host adapters can preserve the
+portable contract while documenting renderer-policy choices or host limitations.
+Host adapters should run the shared corpus first, then add adapter or workflow
+tests separately.
 
 Run `npm run build:examples` to regenerate the static examples from the current
 parser, stylesheet, and shared fixture corpus.

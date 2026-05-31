@@ -31,13 +31,32 @@ function hasNone(value, parts) {
 
 test("shared fixture corpus is well formed", () => {
   assert.equal(htmlRenderFixtureCorpus.version, 1);
+  assert.deepEqual(Object.keys(htmlRenderFixtureCorpus.fixtureTypes).sort(), [
+    "host-skip",
+    "rendering-policy",
+    "semantic",
+  ]);
   assert.ok(Array.isArray(htmlRenderFixtureCorpus.cases));
   const ids = new Set();
+  const allowedAssertionTypes = new Set(Object.keys(htmlRenderFixtureCorpus.fixtureTypes));
   for (const fixture of htmlRenderFixtureCorpus.cases) {
     assert.ok(fixture.id, "fixture id is required");
     assert.ok(!ids.has(fixture.id), `duplicate fixture id ${fixture.id}`);
     ids.add(fixture.id);
     assert.ok(fixture.category, `fixture ${fixture.id} category is required`);
+    assert.ok(
+      allowedAssertionTypes.has(fixture.assertionType),
+      `fixture ${fixture.id} assertionType must be one of ${[...allowedAssertionTypes].join(", ")}`
+    );
+    if (fixture.assertionType === "rendering-policy") {
+      assert.ok(fixture.options, `fixture ${fixture.id} must declare renderer options`);
+    }
+    if (fixture.assertionType === "host-skip") {
+      assert.ok(
+        Array.isArray(fixture.hostSkip) && fixture.hostSkip.length > 0,
+        `fixture ${fixture.id} must declare hostSkip`
+      );
+    }
     assert.ok(fixture.name, `fixture ${fixture.id} name is required`);
     assert.ok(typeof fixture.input === "string", `fixture ${fixture.id} input must be a string`);
     assert.ok(
@@ -55,8 +74,8 @@ test("shared fixture corpus is well formed", () => {
 
 for (const fixture of htmlRenderFixtureCorpus.cases) {
   test(`shared fixture ${fixture.id}: ${fixture.name}`, () => {
-    const html = inline(fixture.input);
-    hasAll(html, fixture.contains);
+    const html = inline(fixture.input, fixture.options);
+    hasAll(html, fixture.contains || []);
     hasNone(html, fixture.notContains || []);
     for (const count of fixture.counts || []) {
       assert.equal(

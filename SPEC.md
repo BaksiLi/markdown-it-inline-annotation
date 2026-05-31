@@ -13,7 +13,21 @@ plugin, the markdown-it implementation, the Obsidian and VS Code adapters, and
 later remark/unified support. Every implementation emits the canonical `ia-*`
 HTML class contract, so one stylesheet family works across hosts.
 
-## Operators
+## Status and Terminology
+
+The sections under **Normative Specification**, **Class Contract**, and
+**Markdown Compatibility** define the portable behavior implementations must
+preserve. Examples, rationale, conformance-fixture guidance, operator-property
+notes, grammar sketches, and migration notes are non-normative unless they
+explicitly use normative language.
+
+The words "must", "should", and "may" are used in their ordinary specification
+sense: "must" is required for conformance, "should" is recommended unless a host
+constraint makes it impractical, and "may" is optional.
+
+## Normative Specification
+
+### Operators
 
 Two position-assignment operators on a two-slot system (over / under):
 
@@ -37,7 +51,7 @@ base^_(annotation)
 An operator is only recognized when immediately followed by `(`. `^^` or `^_`
 not followed by `(` is literal text.
 
-## Slots
+### Slots
 
 Each base has two slots. Pipe notation and mixed chaining are equivalent:
 
@@ -55,7 +69,7 @@ Each base has two slots. Pipe notation and mixed chaining are equivalent:
   author sees it (e.g. the `^_(z)` in `[a]^^(x|y)^_(z)`), rather than being
   silently dropped. Tooling may warn.
 
-## Decoration Marks
+### Decoration Marks
 
 A slot value is a **mark** when its entire content matches one of the patterns
 below; otherwise it is ruby text. The slot determines the side; the glyph
@@ -78,7 +92,7 @@ determines the mark. Marks are symmetric across slots:
 To use a mark glyph as literal ruby text, escape the leading dot: `[x]^^(\.-)`
 renders ruby text ".-" above `x`.
 
-## Alignment
+### Alignment
 
 Space alignment is a **rendering enhancement**, not part of the structural
 contract. It never changes meaning — only layout — so a renderer may apply it or
@@ -110,7 +124,7 @@ An `"auto"` policy should be conservative. For example,
 `[取り返す]^^(と り かえ す)` is a good candidate for per-character layout, while
 `[真值]^^(Truth Value)` should usually remain group ruby.
 
-## Nested Spans
+### Nested Spans
 
 Bracketed bases may contain another Inline Annotation expression, for partially
 overlapping ruby. The base is parsed recursively; annotation slot contents are
@@ -121,7 +135,7 @@ plain text in v2 (not parsed as Markdown).
 [初音ミク^^(偉大なる|世界一姫様)]^_(Vocaloid)
 ```
 
-## Escapes
+### Escapes
 
 Backslash escapes are honored inside bases and annotations. Escaped pipe is
 literal text, not a slot separator:
@@ -132,7 +146,7 @@ literal text, not a slot separator:
 [x]^^(\.-)
 ```
 
-## Degenerate Behavior
+### Degenerate Behavior
 
 | Input | Result |
 | --- | --- |
@@ -176,17 +190,24 @@ raw HTML, and entities. Emphasis and other inline constructs should continue to
 be parsed by the host Markdown engine. Implementations must escape user-provided
 base and annotation text before producing HTML.
 
-## Conformance Fixtures
+## Non-Normative Guidance
+
+### Conformance Fixtures
 
 The shared host-neutral fixture corpus lives in `fixtures/html-render.json`.
 Adapters should run this corpus before adding host-specific tests. Fixtures
 assert semantic fragments and substring counts rather than exact serialized
 HTML, so markdown-it, Logseq, Obsidian, and future unified adapters can differ
 in wrapper markup or attribute ordering while preserving the same syntax
-behavior. Host-specific behavior (Logseq slash-command conversion, parser
-conflicts) is tested outside this corpus.
+behavior. Semantic fixtures should assert the class contract and visible text,
+not a renderer's choice to use inline styles or stylesheets. Rendering-policy
+fixtures declare options such as `spaceAlignment: "always"`. Host-specific
+behavior (Logseq slash-command conversion, parser conflicts, editor DOM timing)
+is tested outside this corpus.
 
-## Appendix: Operator Properties
+## Non-Normative Appendices
+
+### Appendix A: Operator Properties
 
 `^^` and `^_` are position-assignment operators on a 2-slot system (over /
 under). Marks (`..`, `.-`, `.~`, `.=`) switch a slot from ruby text to CSS
@@ -210,7 +231,49 @@ claimed once):
 **Capacity** — max 2 levels (over + under) per base. Over-capacity input renders
 through as text (changed from v1, which silently dropped it).
 
-## Changes from v1
+### Appendix B: Grammar Sketch (EBNF)
+
+This grammar is descriptive. Markdown hosts still decide where inline extension
+rules are allowed to run, and the implementation must also enforce the
+degenerate behavior table above.
+
+```ebnf
+inline-annotation = bracketed-form | abbreviated-form ;
+
+bracketed-form    = bracketed-base op annotation [ opposite-chain ] ;
+abbreviated-form  = abbreviated-base op annotation [ opposite-chain ] ;
+
+op                = "^^" | "^_" ;
+opposite-chain    = opposite-op annotation ;
+opposite-op       = "^_" when op is "^^"
+                  | "^^" when op is "^_" ;
+
+annotation        = "(" slot-list ")" ;
+slot-list         = slot [ "|" slot ] ;
+slot              = { escaped-char | annotation-char } ;
+
+bracketed-base    = "[" { escaped-char | bracketed-base | base-char } "]" ;
+abbreviated-base  = 1*abbreviated-base-char ;
+
+mark              = ".." | ".-" | ".~" | ".=" ;
+escaped-char      = "\\" any-char ;
+
+annotation-char   = any-char except unescaped "|", unescaped ")", LF, CR ;
+base-char         = any-char except unescaped "]", LF, CR ;
+abbreviated-base-char
+                  = any-char except whitespace and Markdown structural delimiters ;
+```
+
+Recognition notes:
+
+- An operator is recognized only when the next character after the operator is
+  `(`.
+- `opposite-chain` is accepted only when the first annotation has remaining
+  slot capacity. Same-operator chains are not merged.
+- `mark` classification happens after slot splitting and before escape removal;
+  escaping the leading dot keeps the slot as ruby text.
+
+### Appendix C: Changes from v1
 
 v1 is archived at [`docs/SPEC-v1.md`](./docs/SPEC-v1.md). Rationale, migration
 notes, and the core layering plan are in [`docs/v2-rationale.md`](./docs/v2-rationale.md).

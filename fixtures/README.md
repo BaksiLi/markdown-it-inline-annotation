@@ -13,10 +13,23 @@ Fixture fields:
 - `id`: stable identifier used by every adapter test.
 - `category`: broad behavior group, such as `ruby`, `slots`, `alignment`,
   `decoration`, `escaping`, `safety`, or `rejection`.
+- `assertionType`: how portable the assertion is:
+  - `semantic`: host-neutral syntax and class-contract behavior that every
+    adapter should preserve.
+  - `rendering-policy`: output that depends on declared renderer options, such
+    as `spaceAlignment: "always"`.
+  - `host-skip`: reserved for copied adapter suites when a documented host
+    parser limitation prevents a host from running an otherwise shared case.
 - `input`: Inline Annotation source.
+- `options`: renderer options required by a `rendering-policy` case.
 - `contains`: fragments that must appear in rendered HTML.
 - `notContains`: fragments that must not appear.
 - `counts`: exact substring counts for portable structural assertions.
+
+Semantic fixtures should avoid asserting inline style strings unless the style
+itself is the behavior under test. Prefer canonical `ia-*` classes and visible
+text fragments so adapters can choose inline styles, stylesheets, or host DOM
+wrappers independently.
 
 This file is currently canonical in the markdown-it package. Host adapters can
 copy it until the project moves fixtures into a neutral package or monorepo.
@@ -38,4 +51,6 @@ The current cross-repo copy is intentional but temporary:
 
 Add host-neutral cases here first. If a case depends on a host parser, command
 workflow, DOM timing, or editor-specific escaping behavior, keep it in that
-adapter's own tests.
+adapter's own tests. If a host copies this corpus and temporarily cannot run a
+case because of a known host limitation, mark that copied case as `host-skip`
+with a `hostSkip` note instead of deleting or silently weakening it.
