@@ -153,6 +153,24 @@
       "assertionType": "semantic"
     },
     {
+      "id": "ruby-pipe-extra-level-passes-through",
+      "category": "slots",
+      "name": "extra pipe level leaves overflow text visible",
+      "input": "[a]^^(x|y|z)",
+      "contains": [
+        "<rt>x</rt>",
+        "<rt>y</rt>",
+        "|z"
+      ],
+      "counts": [
+        {
+          "pattern": "<rt>",
+          "count": 2
+        }
+      ],
+      "assertionType": "semantic"
+    },
+    {
       "id": "align-per-character",
       "category": "alignment",
       "name": "per-character alignment",

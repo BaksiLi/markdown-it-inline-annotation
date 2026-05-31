@@ -34,6 +34,7 @@ export interface InlineAnnotationModel {
   base: InlineAnnotationRange;
   primaryOp: AnnotationOp;
   slots: InlineAnnotationSlot[];
+  overflow: InlineAnnotationRange[];
 }
 
 export interface InlineAnnotationMatch {
@@ -42,6 +43,11 @@ export interface InlineAnnotationMatch {
   html: string;
   source: string;
   model: InlineAnnotationModel;
+}
+
+interface SlotResolution {
+  slots: InlineAnnotationSlot[];
+  overflow: InlineAnnotationRange[];
 }
 
 interface ResolvedOptions {
@@ -460,6 +466,7 @@ export function renderInlineAnnotationModelToHtml(model: InlineAnnotationModel, 
   const baseRaw = model.base.raw;
   const baseHtml = renderInlineAnnotationsToHtml(baseRaw, options);
   const plainBase = hasInlineAnnotation(baseRaw) ? "" : stripInlineAnnotationMarkup(baseRaw, options);
+  const overflowHtml = model.overflow.map((range) => escapedText(range.raw)).join("");
   const classified = model.slots.map((slot) => ({ slot, value: classifySlot(slot.raw, slot.position) }));
   const decorations = classified
     .map(({ value }) => value)
@@ -470,7 +477,7 @@ export function renderInlineAnnotationModelToHtml(model: InlineAnnotationModel, 
 
   // Pure decoration(s): bouten and/or over/under lines, no ruby text.
   if (rubies.length === 0) {
-    return renderDecorations(baseHtml, decorations, options);
+    return renderDecorations(baseHtml, decorations, options) + overflowHtml;
   }
 
   // One ruby slot paired with one decoration slot (e.g. ruby above + underline
@@ -478,27 +485,37 @@ export function renderInlineAnnotationModelToHtml(model: InlineAnnotationModel, 
   // operator order the author used.
   if (rubies.length === 1 && decorations.length === 1) {
     const ruby = rubies[0];
-    return renderRubyWithDecoration(baseHtml, escapedText(ruby.value.raw), ruby.slot.position, decorations[0], options);
+    return renderRubyWithDecoration(baseHtml, escapedText(ruby.value.raw), ruby.slot.position, decorations[0], options) + overflowHtml;
   }
 
   // One or two ruby slots: defer to the ruby renderer, which handles space
   // alignment and nested two-level ruby. Slot index 0 is the operator's own
   // position (inner), index 1 the opposite (outer) — the order renderRubyLevels
   // expects.
-  return renderRubyLevels(baseHtml, plainBase, model.primaryOp, rubies.map((ruby) => ruby.value.raw), options);
+  return renderRubyLevels(baseHtml, plainBase, model.primaryOp, rubies.map((ruby) => ruby.value.raw), options) + overflowHtml;
 }
 
-function createSlots(op: AnnotationOp, ann: string, annStart: number, op2: AnnotationOp | null, ann2: InlineAnnotationRange | null): InlineAnnotationSlot[] {
+function resolveSlots(op: AnnotationOp, ann: string, annStart: number, op2: AnnotationOp | null, ann2: InlineAnnotationRange | null): SlotResolution {
   const levels = splitByUnescapedPipeWithRanges(ann, annStart);
   const slots: InlineAnnotationSlot[] = [
     { ...levels[0], position: positionForOp(op), source: "primary" },
   ];
+  const overflow: InlineAnnotationRange[] = [];
   if (levels.length >= 2) {
     slots.push({ ...levels[1], position: positionForOp(opposite(op)), source: "pipe" });
+    if (levels.length > 2) {
+      const overflowStart = levels[2].start - 1;
+      const overflowEnd = levels[levels.length - 1].end;
+      overflow.push({
+        start: overflowStart,
+        end: overflowEnd,
+        raw: ann.slice(overflowStart - annStart, overflowEnd - annStart),
+      });
+    }
   } else if (op2 !== null && ann2 !== null) {
     slots.push({ ...ann2, position: positionForOp(op2), source: "chain" });
   }
-  return slots;
+  return { slots, overflow };
 }
 
 function parseBracketedAt(input: string, start: number, max: number, options: ResolvedOptions): InlineAnnotationModel | null {
@@ -530,6 +547,7 @@ function parseBracketedAt(input: string, start: number, max: number, options: Re
   }
 
   const source = input.slice(start, end);
+  const resolvedSlots = resolveSlots(op, ann, annStart, op2, ann2);
   return {
     form: "bracketed",
     start,
@@ -537,7 +555,8 @@ function parseBracketedAt(input: string, start: number, max: number, options: Re
     source,
     base: { start: start + 1, end: close, raw: input.slice(start + 1, close) },
     primaryOp: op,
-    slots: createSlots(op, ann, annStart, op2, ann2),
+    slots: resolvedSlots.slots,
+    overflow: resolvedSlots.overflow,
   };
 }
 
@@ -573,6 +592,7 @@ function parseAbbreviatedAt(input: string, start: number, max: number, options: 
       }
 
       const source = input.slice(start, end);
+      const resolvedSlots = resolveSlots(op, ann, annStart, op2, ann2);
       return {
         form: "abbreviated",
         start,
@@ -580,7 +600,8 @@ function parseAbbreviatedAt(input: string, start: number, max: number, options: 
         source,
         base: { start, end: i, raw: base },
         primaryOp: op,
-        slots: createSlots(op, ann, annStart, op2, ann2),
+        slots: resolvedSlots.slots,
+        overflow: resolvedSlots.overflow,
       };
     }
 

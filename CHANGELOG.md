@@ -8,6 +8,8 @@
 - Expose source ranges for the whole expression, base, and positioned slots, so
   hosts such as Obsidian Live Preview can build decorations without reparsing
   generated HTML.
+- Surface extra pipe levels as visible overflow text instead of silently
+  dropping them (`[a]^^(x|y|z)` renders `x`, `y`, and visible `|z`).
 - Keep the existing HTML renderer and markdown-it plugin backed by the same
   model path.
 

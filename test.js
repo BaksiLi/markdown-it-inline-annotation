@@ -243,6 +243,12 @@ test("pipe-saturated annotation leaves later operator as text", () => {
   assert.ok(html.includes("^_(..)"));
 });
 
+test("extra pipe levels stay visible", () => {
+  const html = inline("[a]^^(x|y|z)");
+  hasAll(html, ["<rt>x</rt>", "<rt>y</rt>", "|z"]);
+  assert.equal((html.match(/<rt>/g) || []).length, 2);
+});
+
 test("escaped pipe stays literal", () => {
   const html = inline("[A|B]^^(a\\|b)");
   hasAll(html, ["A|B", "<rt>a|b</rt>"]);
@@ -345,6 +351,14 @@ test("pipe-saturated model leaves chained overflow outside range", () => {
   assert.equal(model.source, "[李太白]^^(り たい はく|Lǐ Tài Bái)");
   assert.equal(source.slice(model.end), "^_(..)");
   assert.equal(model.slots.length, 2);
+});
+
+test("model exposes extra pipe overflow range", () => {
+  const model = findInlineAnnotationModel("[a]^^(x|y|z)");
+  assert.ok(model);
+  assert.deepEqual(model.slots.map((slot) => slot.raw), ["x", "y"]);
+  assert.deepEqual(model.overflow.map((range) => range.raw), ["|z"]);
+  assert.equal(renderInlineAnnotationModelToHtml(model).includes("|z"), true);
 });
 
 test("package subpath exports expose core and fixtures", () => {

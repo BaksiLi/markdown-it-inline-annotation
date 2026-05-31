@@ -65,9 +65,10 @@ Each base has two slots. Pipe notation and mixed chaining are equivalent:
 - Same-operator chaining is not merged: `[a]^^(x)^^(y)` is two separate
   expressions.
 - **Over-capacity input renders through as text.** When pipe notation already
-  fills both slots, a following chained operator is shown as literal text so the
-  author sees it (e.g. the `^_(z)` in `[a]^^(x|y)^_(z)`), rather than being
-  silently dropped. Tooling may warn.
+  fills both slots, extra pipe levels or a following chained operator are shown
+  as literal text so the author sees them (e.g. the `|z` in `[a]^^(x|y|z)` or
+  the `^_(z)` in `[a]^^(x|y)^_(z)`), rather than being silently dropped.
+  Tooling may warn.
 
 ### Decoration Marks
 
@@ -156,6 +157,7 @@ literal text, not a slot separator:
 | newline inside `[...]` or `(...)` | not matched |
 | `\^^(...)` (escaped operator) | literal text |
 | `[a]^^(x)^^(y)` (same-operator chain) | first matched; `^^(y)` literal |
+| `[a]^^(x|y|z)` (extra pipe level) | x, y render; `|z` renders as text |
 | `[a]^^(x|y)^_(z)` (over capacity) | x, y render; `^_(z)` renders as text |
 
 ## Class Contract
