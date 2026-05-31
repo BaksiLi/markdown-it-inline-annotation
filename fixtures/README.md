@@ -29,7 +29,9 @@ Fixture fields:
 Semantic fixtures should avoid asserting inline style strings unless the style
 itself is the behavior under test. Prefer canonical `ia-*` classes and visible
 text fragments so adapters can choose inline styles, stylesheets, or host DOM
-wrappers independently.
+wrappers independently. They should also avoid inputs where default rendering
+policy changes the asserted structure; put those cases under `rendering-policy`
+with explicit `options` instead.
 
 This file is currently canonical in the markdown-it package. Host adapters can
 copy it until the project moves fixtures into a neutral package or monorepo.

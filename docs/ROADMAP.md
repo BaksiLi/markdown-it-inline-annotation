@@ -17,18 +17,18 @@ Specs:
 
 | Project | Role | Status |
 | --- | --- | --- |
-| `markdown-it-inline-annotation` | Core spec + parser + markdown-it adapter | npm `0.2.0` (v2) |
-| `logseq-furigana-ruby` | Reference plugin (independent parser) | `0.5.1` (v1), emits canonical `ia-*` |
-| `vscode-inline-annotation` | Preview-only adapter via `extendMarkdownIt` | `0.1.x` (tracks markdown-it) |
-| `obsidian-inline-annotation` | Reading-view DOM postprocessor | `0.1.0` prototype (v1) |
+| `markdown-it-inline-annotation` | Core spec + parser/model + markdown-it adapter | npm `0.3.0` (v2 + source ranges) |
+| `logseq-furigana-ruby` | Reference plugin (independent parser) | `0.6.0` (v2), emits canonical `ia-*` |
+| `vscode-inline-annotation` | Preview-only adapter via `extendMarkdownIt` | `0.2.0` (tracks markdown-it) |
+| `obsidian-inline-annotation` | Reading-view postprocessor + Live Preview prototype | `0.3.0` prototype |
 | remark/unified | AST adapter | deferred |
 
 Phase detail lives in `CHANGELOG.md`. This file keeps the durable decisions.
 
 v2 changes (symmetric over/under line marks, alignment as a rendering
-enhancement, pipe-overflow rendered as text) ship first in the markdown-it
-package. Other adapters migrate from v1 to v2 after the implementation blog post;
-they stay conformant in the meantime because v2 is almost a superset of v1.
+enhancement, pipe-overflow rendered as text) have shipped across the active
+adapters. `0.3.0` adds the source-range model API needed by editor-layer
+adapters such as Obsidian Live Preview.
 
 ## Architecture Principles
 
@@ -92,7 +92,9 @@ Three fixture layers:
    corpus: `fixtures/html-render.json`. Logseq keeps a checked-in copy
    (`src/shared-html-render-fixtures.json`) as a transition mechanism until a
    second non-Logseq adapter justifies importing or a monorepo. These assert
-   semantic fragments / counts, not exact serialized HTML.
+   semantic fragments / counts, not exact serialized HTML. Cases are classified
+   as `semantic`, `rendering-policy`, or `host-skip`; semantic cases must not
+   depend on inline styles, class order, or default renderer policy.
 2. **Adapter fixtures** — integration behavior (markdown-it parsing, Obsidian
    DOM replacement, remark AST).
 3. **Host workflow fixtures** — host-specific behavior (Logseq macro conversion,
@@ -120,19 +122,16 @@ Do not move the spec before the adapter boundary is proven.
 
 ## Future Work
 
-### Adapter migration to v2 (after the blog post)
+### Adapter conformance drift
 
-markdown-it ships v2 first. Then migrate, in order of cost:
+Keep the active adapters aligned with the shared fixture taxonomy:
 
-- **VS Code** — thin `extendMarkdownIt` wrapper, so bumping the
-  `markdown-it-inline-annotation` dependency adopts v2 with no code change; it
-  already runs the shared corpus from the npm package.
-- **Obsidian** — reading-view postprocessor on the shared core; gains overline
-  marks and pipe-overflow text for free, re-run the shared corpus (its
-  alignment-policy skip list stays valid since alignment is non-semantic).
-- **Logseq** — independent parser; needs the symmetric-mark and pipe-overflow
-  changes ported, and its vendored corpus copy refreshed (or replaced by the
-  monorepo's shared fixtures).
+- **VS Code** should stay a thin `extendMarkdownIt` wrapper and run the shared
+  corpus from the npm package.
+- **Obsidian** should use the shared core model for both Reading view and Live
+  Preview, skipping only documented host or rendering-policy cases.
+- **Logseq** should periodically refresh its vendored corpus copy, or replace it
+  with the monorepo/shared package source when that exists.
 
 ### Online demo (shipped, iterate later)
 
@@ -164,13 +163,15 @@ Prepare now by keeping source ranges available, separating parse semantics from
 HTML rendering, and avoiding syntax that cannot be expressed as a real inline
 tokenizer.
 
-### Obsidian Live Preview — deferred
+### Obsidian Live Preview — active prototype
 
-Reading-view is v1. Live Preview via CodeMirror 6 decorations is the boundary
-between "preview" and "real editor": it needs `ViewPlugin` + replace/widget
-decorations, cursor-enter source restoration, IME, and undo/redo handling. Large
-surface, easy to break. Document as deferred; revisit as a dedicated phase after
-the demo and reading-view release ship.
+Live Preview via CodeMirror 6 decorations is the boundary between "preview" and
+"real editor." The first prototype uses replacement widgets backed by the shared
+source-range model and restores source while the cursor or selection touches an
+annotation. The remaining hard parts are syntax-aware source skipping, IME,
+partial-selection ergonomics, and undo/redo behavior. Keep this work in the
+Obsidian adapter; the shared core should expose model/range data but not editor
+policy.
 
 ## Tooling Policy
 

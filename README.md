@@ -25,8 +25,8 @@ It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https:
 | --- | --- | --- |
 | `markdown-it-inline-annotation` | Current package | Portable markdown-it adapter backed by the shared Inline Annotation core. |
 | [logseq-furigana-ruby](https://github.com/BaksiLi/logseq-furigana-ruby) | Published | Mature Logseq plugin; includes macros and conversion commands for Logseq-specific parser conflicts. |
-| [vscode-inline-annotation](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | Published | Preview-only adapter ; uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
-| [obsidian-inline-annotation](https://github.com/BaksiLi/obsidian-inline-annotation) | Reading view prototype | Obsidian reading-view postprocessor using the shared core; Live Preview deferred. |
+| [vscode-inline-annotation](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | Published | Preview-only adapter; uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
+| [obsidian-inline-annotation](https://github.com/BaksiLi/obsidian-inline-annotation) | Prototype | Reading-view postprocessor plus early Live Preview replacement widgets using the shared core model. |
 | remark/unified adapter | Planned later | Should use the spec and shared fixtures once the syntax is stable across markdown-it and Obsidian. |
 
 ## Install

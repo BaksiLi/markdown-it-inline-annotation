@@ -52,6 +52,11 @@ test("shared fixture corpus is well formed", () => {
     );
     if (fixture.assertionType === "rendering-policy") {
       assert.ok(fixture.options, `fixture ${fixture.id} must declare renderer options`);
+    } else {
+      assert.equal(fixture.options, undefined, `fixture ${fixture.id} must not depend on renderer options`);
+    }
+    if (fixture.category === "alignment") {
+      assert.equal(fixture.assertionType, "rendering-policy", `fixture ${fixture.id} must declare rendering-policy`);
     }
     if (fixture.assertionType === "host-skip") {
       assert.ok(
