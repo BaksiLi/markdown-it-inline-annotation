@@ -17,18 +17,18 @@ Specs:
 
 | Project | Role | Status |
 | --- | --- | --- |
-| `markdown-it-inline-annotation` | Core spec + parser/model + markdown-it adapter | npm `0.3.0` (v2 + source ranges) |
-| `logseq-furigana-ruby` | Reference plugin (independent parser) | `0.6.0` (v2), emits canonical `ia-*` |
-| `vscode-inline-annotation` | Preview-only adapter via `extendMarkdownIt` | `0.2.0` (tracks markdown-it) |
-| `obsidian-inline-annotation` | Reading-view postprocessor + Live Preview prototype | `0.3.0` prototype |
+| `markdown-it-inline-annotation` | Core spec + parser/model + markdown-it adapter | `0.3.1` (v2 + source ranges + multi-model scanner) |
+| `logseq-furigana-ruby` | Reference plugin (independent parser) | `0.6.0` line (v2), emits canonical `ia-*`; refresh pending |
+| `vscode-inline-annotation` | Preview-only adapter via `extendMarkdownIt` | `0.3.1` thin adapter tracking markdown-it |
+| `obsidian-inline-annotation` | Reading-view postprocessor + Live Preview prototype | `0.3.2` prototype, core-model backed |
 | remark/unified | AST adapter | deferred |
 
 Phase detail lives in `CHANGELOG.md`. This file keeps the durable decisions.
 
 v2 changes (symmetric over/under line marks, alignment as a rendering
 enhancement, pipe-overflow rendered as text) have shipped across the active
-adapters. `0.3.0` adds the source-range model API needed by editor-layer
-adapters such as Obsidian Live Preview.
+adapters. `0.3.x` adds the source-range model and multi-model scanner APIs
+needed by editor-layer adapters such as Obsidian Live Preview.
 
 ## Architecture Principles
 
@@ -135,6 +135,21 @@ Keep the active adapters aligned with the shared fixture taxonomy:
 - **Logseq** should periodically refresh its vendored corpus copy, or replace it
   with the monorepo/shared package source when that exists.
 
+Recent alignment:
+
+- Core `0.3.1` exposes single-match and multi-match model scanners.
+- Obsidian `0.3.2` consumes the shared scanner in Live Preview and keeps
+  host-owned source ranges behind a replaceable provider.
+- VS Code `0.3.1` remains a thin `extendMarkdownIt` adapter and validates the
+  shared corpus through the package it tracks.
+
+Current milestone: **Obsidian Live Preview syntax awareness**. The next useful
+increment is a CodeMirror syntax-tree host-range provider that can replace the
+fallback Markdown scanner without changing the core model or decoration planner.
+Logseq refresh follows after the core/Obsidian boundary stabilizes, because its
+host conflicts require adapter-specific decisions rather than Obsidian's
+CodeMirror strategy.
+
 ### Online demo (shipped, iterate later)
 
 `examples/playground.html` is generated from the core renderer and the shared
@@ -170,10 +185,11 @@ tokenizer.
 Live Preview via CodeMirror 6 decorations is the boundary between "preview" and
 "real editor." The first prototype uses replacement widgets backed by the shared
 source-range model and restores source while the cursor or selection touches an
-annotation. The remaining hard parts are syntax-aware source skipping, IME,
-partial-selection ergonomics, and undo/redo behavior. Keep this work in the
-Obsidian adapter; the shared core should expose model/range data but not editor
-policy.
+annotation. The current implementation plans decorations per source line and
+routes host-owned syntax through a replaceable range provider. The remaining
+hard parts are CodeMirror syntax-tree source skipping, IME, partial-selection
+ergonomics, and undo/redo behavior. Keep this work in the Obsidian adapter; the
+shared core should expose model/range data but not editor policy.
 
 ## Tooling Policy
 
