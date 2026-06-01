@@ -20,7 +20,7 @@ Specs:
 | `markdown-it-inline-annotation` | Core spec + parser/model + markdown-it adapter | `0.3.1` (v2 + source ranges + multi-model scanner) |
 | `logseq-furigana-ruby` | Reference plugin (independent parser) | `0.6.0` line (v2), emits canonical `ia-*`; refresh pending |
 | `vscode-inline-annotation` | Preview-only adapter via `extendMarkdownIt` | `0.3.1` thin adapter tracking markdown-it |
-| `obsidian-inline-annotation` | Reading-view postprocessor + Live Preview prototype | `0.3.2` prototype, core-model backed |
+| `obsidian-inline-annotation` | Reading-view postprocessor + Live Preview prototype | `0.3.5` prototype, core-first + syntax-tree context |
 | remark/unified | AST adapter | deferred |
 
 Phase detail lives in `CHANGELOG.md`. This file keeps the durable decisions.
@@ -138,17 +138,17 @@ Keep the active adapters aligned with the shared fixture taxonomy:
 Recent alignment:
 
 - Core `0.3.1` exposes single-match and multi-match model scanners.
-- Obsidian `0.3.2` consumes the shared scanner in Live Preview and keeps
-  host-owned source ranges behind a replaceable provider.
+- Obsidian `0.3.5` consumes the shared scanner in Live Preview and uses
+  CodeMirror syntax-tree ranges as host context after core annotation models are
+  found.
 - VS Code `0.3.1` remains a thin `extendMarkdownIt` adapter and validates the
   shared corpus through the package it tracks.
 
-Current milestone: **Obsidian Live Preview syntax awareness**. The next useful
-increment is a CodeMirror syntax-tree host-range provider that can replace the
-fallback Markdown scanner without changing the core model or decoration planner.
-Logseq refresh follows after the core/Obsidian boundary stabilizes, because its
-host conflicts require adapter-specific decisions rather than Obsidian's
-CodeMirror strategy.
+Current milestone: **Logseq v2 refresh and adapter drift closure**. Obsidian has
+proved the core-first boundary: core finds Inline Annotation models, host syntax
+only validates context. The next useful increment is refreshing Logseq's
+vendored fixture corpus and parser behavior against the current v2 contract
+without forcing it into Obsidian's CodeMirror strategy.
 
 ### Online demo (shipped, iterate later)
 
@@ -185,11 +185,12 @@ tokenizer.
 Live Preview via CodeMirror 6 decorations is the boundary between "preview" and
 "real editor." The first prototype uses replacement widgets backed by the shared
 source-range model and restores source while the cursor or selection touches an
-annotation. The current implementation plans decorations per source line and
-routes host-owned syntax through a replaceable range provider. The remaining
-hard parts are CodeMirror syntax-tree source skipping, IME, partial-selection
-ergonomics, and undo/redo behavior. Keep this work in the Obsidian adapter; the
-shared core should expose model/range data but not editor policy.
+annotation. The current implementation plans decorations per source line, scans
+core annotation models first, and uses CodeMirror syntax-tree ranges only as
+host context. The remaining hard parts are IME, partial-selection ergonomics,
+undo/redo behavior, and richer edit-mode rendering. Keep this work in the
+Obsidian adapter; the shared core should expose model/range data but not editor
+policy.
 
 ## Tooling Policy
 
