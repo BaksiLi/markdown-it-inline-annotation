@@ -646,6 +646,26 @@ function matchFromModel(model: InlineAnnotationModel, options: InlineAnnotationO
   };
 }
 
+function findInlineAnnotationModelsIn(
+  input: string,
+  start: number,
+  max: number,
+  rawOptions: InlineAnnotationOptions | undefined,
+  stopBeforeMarkdown: boolean
+): InlineAnnotationModel[] {
+  const models: InlineAnnotationModel[] = [];
+  let pos = start;
+
+  while (pos < max) {
+    const model = findInlineAnnotationModelIn(input, pos, max, rawOptions, stopBeforeMarkdown);
+    if (!model) break;
+    models.push(model);
+    pos = model.end > pos ? model.end : pos + 1;
+  }
+
+  return models;
+}
+
 export function findInlineAnnotationModel(input: string, start = 0, max = input.length, rawOptions?: InlineAnnotationOptions): InlineAnnotationModel | null {
   return findInlineAnnotationModelIn(input, start, max, rawOptions, false);
 }
@@ -657,6 +677,19 @@ export function findInlineAnnotationModelBeforeMarkdown(
   rawOptions?: InlineAnnotationOptions
 ): InlineAnnotationModel | null {
   return findInlineAnnotationModelIn(input, start, max, rawOptions, true);
+}
+
+export function findInlineAnnotationModels(input: string, start = 0, max = input.length, rawOptions?: InlineAnnotationOptions): InlineAnnotationModel[] {
+  return findInlineAnnotationModelsIn(input, start, max, rawOptions, false);
+}
+
+export function findInlineAnnotationModelsBeforeMarkdown(
+  input: string,
+  start = 0,
+  max = input.length,
+  rawOptions?: InlineAnnotationOptions
+): InlineAnnotationModel[] {
+  return findInlineAnnotationModelsIn(input, start, max, rawOptions, true);
 }
 
 export function findInlineAnnotation(input: string, start = 0, max = input.length, rawOptions?: InlineAnnotationOptions): InlineAnnotationMatch | null {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Add `findInlineAnnotationModels` and
+  `findInlineAnnotationModelsBeforeMarkdown` for adapters and lint tooling that
+  need all non-overlapping source models in a span.
+- Keep the single-match model APIs unchanged.
+
 ## 0.3.0
 
 - Add a reusable annotation model API for editor adapters:

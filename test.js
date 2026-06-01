@@ -7,6 +7,8 @@ const {
   renderInlineAnnotationModelToHtml,
   findInlineAnnotation,
   findInlineAnnotationModel,
+  findInlineAnnotationModels,
+  findInlineAnnotationModelsBeforeMarkdown,
 } = require("./dist/index.js");
 const htmlRenderFixtureCorpus = require("./fixtures/html-render.json");
 
@@ -359,6 +361,20 @@ test("findInlineAnnotationModel exposes positioned slots", () => {
   );
 });
 
+test("findInlineAnnotationModels returns non-overlapping source models", () => {
+  const models = findInlineAnnotationModels("a [漢字]^^(かんじ) b [base]^_(.-) c");
+  assert.deepEqual(models.map((model) => model.source), ["[漢字]^^(かんじ)", "[base]^_(.-)"]);
+  assert.deepEqual(models.map((model) => [model.start, model.end]), [
+    [2, 13],
+    [16, 28],
+  ]);
+});
+
+test("findInlineAnnotationModelsBeforeMarkdown stops before host Markdown syntax", () => {
+  const models = findInlineAnnotationModelsBeforeMarkdown("[a]^^(x) [link [b]^^(y)](https://example.com)");
+  assert.deepEqual(models.map((model) => model.source), ["[a]^^(x)"]);
+});
+
 test("model renderer matches inline match HTML", () => {
   const match = findInlineAnnotation("[重要語句]^^(じゅうようごく|.-)");
   assert.ok(match);
@@ -387,6 +403,7 @@ test("package subpath exports expose core and fixtures", () => {
   const corpus = require("markdown-it-inline-annotation/fixtures/html-render.json");
   assert.equal(typeof core.renderInlineAnnotationsToHtml, "function");
   assert.equal(typeof core.findInlineAnnotationModel, "function");
+  assert.equal(typeof core.findInlineAnnotationModels, "function");
   assert.equal(corpus.version, 1);
   assert.ok(corpus.cases.length > 0);
 });
