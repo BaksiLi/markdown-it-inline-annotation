@@ -1,6 +1,6 @@
 {
   "name": "markdown-it-inline-annotation",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "markdown-it plugin for Inline Annotation — ruby, bouten, underline, and two-slot text decorations.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

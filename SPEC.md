@@ -181,9 +181,11 @@ annotations below the base. The reference stylesheet ships at
 
 CSS applies one `text-decoration-style` to all decoration lines on a single
 element. Implementations may merge overline + underline on one span when their
-styles are compatible; if an author combines different line styles on the two
-sides, renderers may choose the most visible shared style or use nested spans.
-Both are conformant when the side classes and line presence are preserved.
+styles are compatible. If an author combines different line styles on the two
+sides, renderers should use independent wrappers, for example an overline span
+around an underline span, so each side keeps its own style. Renderers that cannot
+express this may fall back to the most visible shared style, but the side
+classes and line presence must still be preserved.
 
 ## Markdown Compatibility
 

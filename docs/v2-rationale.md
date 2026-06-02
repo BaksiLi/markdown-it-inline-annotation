@@ -100,10 +100,8 @@ unchanged:
   `ia-line-over`).
 - Whether pipe-overflow is surfaced only by lint or also by a visible renderer
   marker.
-- Whether future renderers should use nested spans for mixed line styles
-  (`^^(.=)^_(.~)`). CSS exposes only one `text-decoration-style` per element,
-  so the current reference renderer preserves both line sides on one span and
-  lets a single style win.
+- Resolved in `0.3.2`: mixed overline/underline styles use nested spans because
+  CSS exposes only one `text-decoration-style` per element.
 
 ## Host compatibility
 

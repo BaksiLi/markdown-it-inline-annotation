@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.2
+
+- Render overline + underline line marks with independent wrapper spans so each
+  side can keep its own style. For example, `[漢字]^^(.-)^_(.~)` now renders a
+  solid overline plus a wavy underline instead of letting one
+  `text-decoration-style` affect both lines.
+
 ## 0.3.1
 
 - Add `findInlineAnnotationModels` and

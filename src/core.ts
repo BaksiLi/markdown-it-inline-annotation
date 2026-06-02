@@ -220,6 +220,25 @@ function lineClass(options: ResolvedOptions, position: AnnotationPosition, style
   return style === "solid" ? base : `${base} ${className(options, `${keyword}-${style}`)}`;
 }
 
+function decorationRank(position: AnnotationPosition): number {
+  return position === "over" ? 0 : 1;
+}
+
+function renderIndependentTextDecorations(baseHtml: string, decos: DecorationSlot[], options: ResolvedOptions): string {
+  const ordered = [...decos].sort((a, b) => decorationRank(a.position) - decorationRank(b.position));
+  let html = baseHtml;
+  for (let i = ordered.length - 1; i >= 0; i--) {
+    const deco = ordered[i];
+    const classes =
+      deco.kind === "bouten"
+        ? [className(options, "bouten"), className(options, `bouten-${deco.position}`)].join(" ")
+        : lineClass(options, deco.position, deco.style);
+    const style = deco.kind === "bouten" ? boutenStyle(deco.position) : lineCss(deco.position, deco.style);
+    html = `<span class="${classes}"${attrStyle(style, options)}>${html}</span>`;
+  }
+  return html;
+}
+
 function splitBySpaces(text: string): string[] {
   return text.split(/\s+/).filter(Boolean);
 }
@@ -283,6 +302,20 @@ function classifySlot(raw: string, position: AnnotationPosition): ClassifiedSlot
 }
 
 function renderDecorations(baseHtml: string, decos: DecorationSlot[], options: ResolvedOptions): string {
+  const textDecorationDecos = decos.filter((deco) => deco.kind === "line" || deco.position === "under");
+  const boutenOver = decos.find((deco) => deco.kind === "bouten" && deco.position === "over");
+
+  // CSS gives one element only one `text-decoration-style`, shared by every
+  // overline/underline on that element. Use independent wrappers when both
+  // sides need text-decoration so `. -` above and `.~` below do not collapse
+  // into a single style.
+  if (textDecorationDecos.length > 1) {
+    const html = renderIndependentTextDecorations(baseHtml, textDecorationDecos, options);
+    if (!boutenOver) return html;
+    const classes = [className(options, "bouten"), className(options, "bouten-over")].join(" ");
+    return `<span class="${classes}"${attrStyle(STYLE_BOUTEN_OVER, options)}>${html}</span>`;
+  }
+
   const classes: string[] = [];
   let emphasis = ""; // bouten over uses text-emphasis (independent of text-decoration)
   const decorationLines: string[] = []; // merged into one text-decoration-line value

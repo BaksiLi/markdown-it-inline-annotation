@@ -193,8 +193,22 @@ test("overline variants", () => {
 
 test("overline above plus underline below", () => {
   const html = inline("[base]^^(.-)^_(.~)");
-  hasAll(html, ["ia-overline", "ia-underline ia-underline-wavy", "text-decoration-line:overline"]);
+  hasAll(html, [
+    '<span class="ia-overline"',
+    '<span class="ia-underline ia-underline-wavy"',
+    "text-decoration-line:overline",
+    "text-decoration-line:underline",
+    "text-decoration-style:wavy",
+  ]);
   hasNone(html, ["<ruby"]);
+});
+
+test("independent overline and underline styles use separate wrappers", () => {
+  const html = inline("[漢字]^^(.-)^_(.~)");
+  assert.match(
+    html,
+    /<span class="ia-overline" style="text-decoration-line:overline"><span class="ia-underline ia-underline-wavy" style="text-decoration-line:underline;text-underline-offset:0\.15em;text-decoration-style:wavy">漢字<\/span><\/span>/
+  );
 });
 
 test("escaped over-slot mark stays ruby text", () => {
