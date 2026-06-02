@@ -109,3 +109,22 @@ v2 adds no new syntax, so the host-conflict surface is identical to v0.x: Logseq
 still pre-parses `^^x^^` / `_x_` (handled at the adapter via macro/HTML
 conversion); Obsidian and VS Code still rely on the mandatory `(` after the
 operator. See [`ROADMAP.md`](./ROADMAP.md) → Host Compatibility Policy.
+
+## Markdown field boundaries
+
+Inline Annotation follows Markdown's field-boundary pattern rather than treating
+every nested substring as general Markdown. Links and images are precedent: link
+labels, destinations, titles, and image alt text each have a specific parsing
+contract. Inline Annotation does the same with base text, annotation slots,
+marks, and pipes.
+
+The v2 model therefore keeps Markdown syntax out of annotation semantics.
+`**bold**`, links, raw HTML, or Live Preview tokens may exist around an
+annotation because the host Markdown engine owns those constructs, but they do
+not decide slot assignment, mark classification, pipe overflow, or diagnostics.
+Annotation slot contents are plain text in v2.
+
+Future AST-level adapters may render richer annotated bases, for example
+emphasis or links inside the base span. That is a rendering/adapter feature, not
+a core semantic rule, and it should preserve the same plain annotation model and
+source ranges.

@@ -194,6 +194,17 @@ raw HTML, and entities. Emphasis and other inline constructs should continue to
 be parsed by the host Markdown engine. Implementations must escape user-provided
 base and annotation text before producing HTML.
 
+Markdown syntax is not part of Inline Annotation semantics. The annotation model
+is defined only by the Inline Annotation grammar: base range, over/under slots,
+pipe/chaining, marks, escaping, and overflow behavior. Annotation slot contents
+are plain text and must not be reparsed as Markdown when deciding slot meaning.
+
+This matches Markdown's field-boundary style: link/image labels, destinations,
+titles, and alt text each have their own parsing contract instead of treating
+every nested substring as general Markdown. Hosts may add richer Markdown
+rendering as an explicit adapter or rendering policy only if the plain
+annotation model and source ranges remain unchanged.
+
 ## Non-Normative Guidance
 
 ### Conformance Fixtures

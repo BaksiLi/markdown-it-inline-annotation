@@ -154,11 +154,11 @@ examples, verifies package subpath exports, checks whitespace, and performs an
 
 ## Compatibility Notes
 
-This package uses a `markdown-it` inline rule instead of replacing rendered text, so it can handle escaped pipes and multiple annotations in one paragraph. It deliberately stops before Markdown constructs such as code spans, links, emphasis, raw HTML, and entities so markdown-it can parse them normally.
+This package uses a `markdown-it` inline rule instead of replacing rendered text, so it can handle escaped pipes and multiple annotations in one paragraph. It deliberately stops before host-owned Markdown constructs such as code spans, links, raw HTML, and entities so markdown-it can parse them normally.
 
 The Logseq plugin remains the reference for the current feature set, but Logseq has host-parser limitations around multiple `^^()` forms in one bullet. Those limitations are not part of the Inline Annotation spec.
 
-Annotation slot contents are plain text. Complex Markdown inside the annotated base should use explicit brackets or be handled in a future AST-level adapter.
+Markdown syntax is not part of Inline Annotation semantics. The core decides only the annotation model: base range, over/under slots, pipes/chains, marks, escapes, and overflow. Annotation slot contents are plain text. Complex Markdown inside the annotated base should use explicit brackets when plain text is enough, or be handled in a future AST-level adapter as a rendering policy that preserves the same annotation model.
 
 ## Design Intent
 

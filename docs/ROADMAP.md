@@ -55,7 +55,8 @@ two-slot model, decoration marks, escaping, source ranges, safety, the `ia-*`
 class contract, and alignment as a non-semantic rendering enhancement.
 
 **Spec does not define:** how a host intercepts Markdown, selection/conversion
-commands, DOM mutation timing, or exact whitespace.
+commands, DOM mutation timing, exact whitespace, or rich Markdown rendering
+inside annotation fields.
 
 **Core may:** parse to a neutral model, preserve source ranges, escape text,
 render class-mode and inline-style HTML, expose fixtures.
@@ -180,6 +181,13 @@ Prepare now by keeping source ranges available, separating parse semantics from
 HTML rendering, and avoiding syntax that cannot be expressed as a real inline
 tokenizer.
 
+AST-level adapters are the right place to explore richer annotated bases such as
+emphasis or links inside the base span. That support must remain a host/rendering
+policy: Markdown syntax can enrich rendered children, but it must not change
+slot assignment, mark classification, escaping, overflow diagnostics, or source
+ranges. Annotation slots stay plain text unless a future spec version defines a
+separate rich-slot contract.
+
 ### Obsidian Live Preview — active prototype
 
 Live Preview via CodeMirror 6 decorations is the boundary between "preview" and
@@ -206,13 +214,14 @@ the current core package.
 
 ## Safety Model
 
-- Base and annotation text are plain text; renderers must escape
-  user-controlled text.
-- Annotation content does not parse arbitrary Markdown.
+- The current core treats parsed base and annotation slot text as plain source
+  text; renderers must escape user-controlled text.
+- Annotation content does not parse arbitrary Markdown, and Markdown syntax is
+  not part of slot semantics.
 - Raw HTML handling is adapter-specific.
 
-Future AST adapters may support richer base content, but only explicitly and
-with separate tests.
+Future AST adapters may support richer base content, but only explicitly, as a
+rendering policy, and with separate tests.
 
 ## Naming
 
