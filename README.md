@@ -1,6 +1,8 @@
 # markdown-it-inline-annotation
 
-`markdown-it` support for **Inline Annotation**.
+Reference `markdown-it` package for **Inline Annotation**: a small Markdown
+extension for inline ruby/furigana and over/under annotation using
+`[base]^^(ruby)` and `[base]^_(under)`.
 
 Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dots, over/under line marks, and two-slot text annotations:
 
@@ -14,6 +16,7 @@ It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https:
 
 - **[SPEC.md](./SPEC.md)** — the v2 syntax, class contract, normative requirements, and non-normative guidance.
 - **[docs/ROADMAP.md](./docs/ROADMAP.md)** — implementation roadmap and adapter boundary decisions.
+- **[docs/BRANDING_AND_BLOG_PLAN.md](./docs/BRANDING_AND_BLOG_PLAN.md)** — naming, positioning, blog outline, and demo direction.
 - **[docs/DIAGNOSTICS.md](./docs/DIAGNOSTICS.md)** — reserved lint/editor diagnostic ids for future tooling.
 - **[docs/v2-rationale.md](./docs/v2-rationale.md)** — why v2 differs from v1, migration notes, and core layering.
 - **[docs/SPEC-v1.md](./docs/SPEC-v1.md)** — the archived v1 syntax (implemented by `0.1.x`).
@@ -24,11 +27,15 @@ It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https:
 
 | Project | Status | Notes |
 | --- | --- | --- |
-| `markdown-it-inline-annotation` | Current package | Portable markdown-it adapter backed by the shared Inline Annotation core. |
+| [`markdown-it-inline-annotation`](https://www.npmjs.com/package/markdown-it-inline-annotation) | Current package | Portable markdown-it adapter backed by the shared Inline Annotation core. |
+| [Inline Ruby Annotation for Obsidian](https://community.obsidian.md/plugins/inline-annotation) | Published | Reading-view postprocessor plus Live Preview replacement widgets using the shared core model. |
+| [Inline Ruby Annotation for VS Code](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | Published | Preview-only adapter; uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
 | [logseq-furigana-ruby](https://github.com/BaksiLi/logseq-furigana-ruby) | Published | Mature Logseq plugin; includes macros and conversion commands for Logseq-specific parser conflicts. |
-| [vscode-inline-annotation](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | Published | Preview-only adapter; uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
-| [obsidian-inline-annotation](https://github.com/BaksiLi/obsidian-inline-annotation) | Prototype | Reading-view postprocessor plus early Live Preview replacement widgets using the shared core model. |
 | remark/unified adapter | Planned later | Should use the spec and shared fixtures once the syntax is stable across markdown-it and Obsidian. |
+
+This is unrelated to popup/comment annotation tools that hide notes behind a
+click. Inline Annotation is source-level markup for visible ruby, phonetic
+guides, glosses, emphasis dots, overlines, and underlines.
 
 ## Install
 

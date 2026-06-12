@@ -1,7 +1,7 @@
 {
   "name": "markdown-it-inline-annotation",
   "version": "0.3.2",
-  "description": "markdown-it plugin for Inline Annotation — ruby, bouten, underline, and two-slot text decorations.",
+  "description": "markdown-it plugin for [base]^^(ruby) Inline Annotation: ruby/furigana, bouten, underline, and two-slot glosses.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -58,7 +58,7 @@
     "type": "git",
     "url": "git+https://github.com/BaksiLi/markdown-it-inline-annotation.git"
   },
-  "homepage": "https://blog.baksili.codes/markdown-ruby",
+  "homepage": "https://github.com/BaksiLi/markdown-it-inline-annotation#readme",
   "bugs": {
     "url": "https://github.com/BaksiLi/markdown-it-inline-annotation/issues"
   },
