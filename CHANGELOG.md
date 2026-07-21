@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.3
+
+- Mark the `markdown-it` peer dependency as optional. Consumers of the `/core`
+  parser and renderer no longer install markdown-it; plugin consumers still
+  provide their host markdown-it instance.
+- Preserve markdown-it strikethrough, backslash escapes, and reserved extension
+  markers before Inline Annotation expressions.
+- Add `fixtures/segment-boundaries.json` to define contiguous, transparent, and
+  semantic rich-text run behavior across adapters.
+- Extend the release check with a packed core-only install that verifies
+  `markdown-it` is absent.
+
 ## 0.3.2
 
 - Render overline + underline line marks with independent wrapper spans so each

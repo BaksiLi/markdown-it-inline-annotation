@@ -1,10 +1,8 @@
 # markdown-it-inline-annotation
 
-Reference `markdown-it` package for **Inline Annotation**: a small Markdown
-extension for inline ruby/furigana and over/under annotation using
-`[base]^^(ruby)` and `[base]^_(under)`.
-
-Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dots, over/under line marks, and two-slot text annotations:
+Reference parser, HTML renderer, and `markdown-it` adapter for **Inline
+Annotation**: visible ruby/furigana, over/under glosses, bouten, overlines, and
+underlines in Markdown.
 
 ```markdown
 [漢字]^^(かんじ)
@@ -12,38 +10,17 @@ Inline Annotation is a Markdown extension for ruby/furigana, bouten emphasis dot
 [重要]^^(..)^_(.~)
 ```
 
-It implements the syntax proposed in [Ruby (Furigana) Syntax in Markdown](https://blog.baksili.codes/markdown-ruby), with the older Logseq plugin treated as the reference implementation for the first compatibility target.
-
-- **[SPEC.md](./SPEC.md)** — the v2 syntax, class contract, normative requirements, and non-normative guidance.
-- **[docs/ROADMAP.md](./docs/ROADMAP.md)** — implementation roadmap and adapter boundary decisions.
-- **[docs/BRANDING_AND_BLOG_PLAN.md](./docs/BRANDING_AND_BLOG_PLAN.md)** — naming, positioning, blog outline, and demo direction.
-- **[docs/DIAGNOSTICS.md](./docs/DIAGNOSTICS.md)** — reserved lint/editor diagnostic ids for future tooling.
-- **[docs/v2-rationale.md](./docs/v2-rationale.md)** — why v2 differs from v1, migration notes, and core layering.
-- **[docs/SPEC-v1.md](./docs/SPEC-v1.md)** — the archived v1 syntax (implemented by `0.1.x`).
-- **[examples/playground.html](./examples/playground.html)** — a minimal core renderer playground.
-- **[examples/before-after.html](./examples/before-after.html)** — a small visual before/after page.
-
-## Ports and Implementations
-
-| Project | Status | Notes |
-| --- | --- | --- |
-| [`markdown-it-inline-annotation`](https://www.npmjs.com/package/markdown-it-inline-annotation) | Current package | Portable markdown-it adapter backed by the shared Inline Annotation core. |
-| [Inline Ruby Annotation for Obsidian](https://community.obsidian.md/plugins/inline-annotation) | Published | Reading-view postprocessor plus Live Preview replacement widgets using the shared core model. |
-| [Inline Ruby Annotation for VS Code](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | Published | Preview-only adapter; uses VS Code's `extendMarkdownIt` hook with no extra scripts or external resources. |
-| [logseq-furigana-ruby](https://github.com/BaksiLi/logseq-furigana-ruby) | Published | Mature Logseq plugin; includes macros and conversion commands for Logseq-specific parser conflicts. |
-| remark/unified adapter | Planned later | Should use the spec and shared fixtures once the syntax is stable across markdown-it and Obsidian. |
-
-This is unrelated to popup/comment annotation tools that hide notes behind a
-click. Inline Annotation is source-level markup for visible ruby, phonetic
-guides, glosses, emphasis dots, overlines, and underlines.
+The syntax began with [Ruby (Furigana) Syntax in
+Markdown](https://blog.baksili.codes/markdown-ruby) and is now shared across
+markdown-it, Obsidian, VS Code, and Logseq.
 
 ## Install
 
-```bash
-npm install markdown-it-inline-annotation
-```
+For the markdown-it plugin, install both the host parser and this adapter:
 
-## Usage
+```bash
+npm install markdown-it markdown-it-inline-annotation
+```
 
 ```js
 const MarkdownIt = require("markdown-it");
@@ -53,57 +30,51 @@ const md = new MarkdownIt().use(inlineAnnotationPlugin);
 md.render("[漢字]^^(かんじ)");
 ```
 
-For integrations that only need the parser/HTML renderer and not markdown-it:
+For the dependency-free parser/model and HTML renderer, install only this
+package and import the `/core` entry:
 
-```js
-const { renderInlineAnnotationsToHtml } = require("markdown-it-inline-annotation/core");
-
-renderInlineAnnotationsToHtml("[漢字]^^(かんじ)");
+```bash
+npm install markdown-it-inline-annotation
 ```
-
-Editor integrations can use the model API when source ranges matter:
 
 ```js
 const {
-  findInlineAnnotationModel,
-  renderInlineAnnotationModelToHtml,
+  findInlineAnnotationModels,
+  renderInlineAnnotationsToHtml,
 } = require("markdown-it-inline-annotation/core");
 
-const model = findInlineAnnotationModel("before [漢字]^^(かんじ)");
-if (model) {
-  console.log(model.base.raw); // "漢字"
-  console.log(model.slots[0].position); // "over"
-  console.log(renderInlineAnnotationModelToHtml(model));
-}
+const models = findInlineAnnotationModels("[漢字]^^(かんじ)");
+const html = renderInlineAnnotationsToHtml("[漢字]^^(かんじ)");
 ```
 
-The model keeps absolute ranges for the expression, base, and positioned slots.
-That lets Live Preview adapters build editor decorations from the semantic
-structure instead of reparsing generated HTML.
+`markdown-it` is an optional peer dependency. Core-only consumers do not
+install it; markdown-it integrations continue to provide their own compatible
+instance.
 
-## Supported Syntax
+## Syntax
 
 | Input | Meaning |
 | --- | --- |
 | `[base]^^(ruby)` | annotation above |
-| `[base]^_(ruby)` | annotation below |
+| `[base]^_(gloss)` | annotation below |
 | `base^^(ruby)` | abbreviated single-token base |
 | `[base]^^(over\|under)` | two-slot annotation |
 | `[base]^^(over)^_(under)` | chained two-slot annotation |
-| `[[護]^^(まも)れ]^_(プロテゴ)` | nested / partially overlapping annotation |
-| `[漢字]^^(..)` | bouten/emphasis dots above |
-| `[base]^_(.-)` | solid underline (under slot) |
+| `[[護]^^(まも)れ]^_(プロテゴ)` | nested or overlapping annotation |
+| `[漢字]^^(..)` | bouten above |
+| `[base]^_(.-)` | solid underline |
 | `[base]^_(.~)` | wavy underline |
 | `[base]^_(.=)` | double underline |
-| `[title]^^(.-)` | overline (over slot) |
-| `[重要語句]^^(じゅうようごく\|.-)` | ruby above plus underline below |
+| `[title]^^(.-)` | solid overline |
 
-With the default renderer policy, per-character annotation is enabled when
-space-separated annotation parts match the number of base characters:
+Space-separated readings can align per character:
 
 ```markdown
 [春夏秋冬]^^(はる なつ あき ふゆ)
 ```
+
+See [SPEC.md](./SPEC.md) for the complete grammar, escapes, overflow behavior,
+class contract, and host-boundary requirements.
 
 ## Options
 
@@ -111,65 +82,66 @@ space-separated annotation parts match the number of base characters:
 md.use(inlineAnnotationPlugin, {
   classPrefix: "ia",
   enableAbbreviated: true,
-  spaceAlignment: "always",
+  spaceAlignment: "always", // "always", "auto", or "off"
   inlineStyles: true,
   fallbackParens: "()",
 });
 ```
 
-Set `spaceAlignment: "off"` if multi-word glosses such as `[真值]^^(Truth Value)`
-should always render as group ruby instead of being auto-aligned by spaces. Use
-`spaceAlignment: "auto"` for conservative per-character layout: phonetic
-readings such as `[取り返す]^^(と り かえ す)` align, while plain ASCII glosses
-stay grouped. The default, `"always"`, preserves the original behavior.
+`spaceAlignment: "auto"` aligns phonetic readings conservatively while keeping
+plain multi-word glosses grouped. `enableSpaceAlignment` remains available as a
+compatibility alias.
 
-The older `enableSpaceAlignment` boolean is still supported for compatibility.
-
-## Styling
-
-By default (`inlineStyles: true`) the renderer emits inline styles, so output is self-contained and needs no stylesheet.
-
-If you set `inlineStyles: false` and render with semantic classes only, ship the canonical stylesheet:
+With `inlineStyles: false`, include the canonical stylesheet:
 
 ```js
 import "markdown-it-inline-annotation/styles.css";
 ```
 
-The stylesheet declares `ruby-position` explicitly on **both** the over and under slots. This is required because `ruby-position` is a CSS *inherited* property: a nested over-ruby placed inside an under-ruby (for example `[[護]^^(まも)れ]^_(プロテゴ)` or per-character double ruby) would otherwise inherit `under` and render both annotations below the base. The default inline-style output sets the same explicit positions for the same reason.
+## Host Integration
 
-## Verify Locally
+The core parses contiguous source strings. DOM and rich-text adapters may join
+only semantically transparent runs; they must preserve expressions that cross
+formatting, links, code, highlights, or other semantic boundaries. The shared
+policy corpus is exported as:
+
+```js
+require("markdown-it-inline-annotation/fixtures/segment-boundaries.json");
+```
+
+The HTML conformance corpus is available at
+`markdown-it-inline-annotation/fixtures/html-render.json`. Adapter-specific
+workarounds remain outside the core.
+
+## Implementations
+
+| Project | Integration |
+| --- | --- |
+| [`markdown-it-inline-annotation`](https://www.npmjs.com/package/markdown-it-inline-annotation) | parser/model, HTML renderer, markdown-it plugin |
+| [Inline Ruby Annotation for Obsidian](https://community.obsidian.md/plugins/inline-annotation) | Reading view and Live Preview |
+| [Inline Annotation for VS Code](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | built-in Markdown preview |
+| [`logseq-furigana-ruby`](https://github.com/BaksiLi/logseq-furigana-ruby) | Logseq renderer, macros, and conversion commands |
+| remark/unified | planned when an AST pipeline needs it |
+
+## Development
 
 ```bash
 npm test
-node -e "const MarkdownIt = require('markdown-it'); const { inlineAnnotationPlugin } = require('./dist/index.js'); console.log(new MarkdownIt().use(inlineAnnotationPlugin).render('[漢字]^^(かんじ)'))"
+npm run build:examples
+npm run check:release
 ```
 
-`npm test` builds the package and runs the shared conformance corpus from
-[`fixtures/html-render.json`](./fixtures/html-render.json), plus
-markdown-it-specific integration cases. The corpus labels assertions as
-`semantic`, `rendering-policy`, or `host-skip` so host adapters can preserve the
-portable contract while documenting renderer-policy choices or host limitations.
-Host adapters should run the shared corpus first, then add adapter or workflow
-tests separately.
+`check:release` runs tests, regenerates examples, checks exports and whitespace,
+packs the tarball, and verifies that `/core` installs and runs without
+`markdown-it`.
 
-Run `npm run build:examples` to regenerate the static examples from the current
-parser, stylesheet, and shared fixture corpus.
+Project documents:
 
-Run `npm run check:release` before publishing. It runs tests, regenerates
-examples, verifies package subpath exports, checks whitespace, and performs an
-`npm pack --dry-run` using a local temp cache.
-
-## Compatibility Notes
-
-This package uses a `markdown-it` inline rule instead of replacing rendered text, so it can handle escaped pipes and multiple annotations in one paragraph. It deliberately stops before host-owned Markdown constructs such as code spans, links, raw HTML, and entities so markdown-it can parse them normally.
-
-The Logseq plugin remains the reference for the current feature set, but Logseq has host-parser limitations around multiple `^^()` forms in one bullet. Those limitations are not part of the Inline Annotation spec.
-
-Markdown syntax is not part of Inline Annotation semantics. The core decides only the annotation model: base range, over/under slots, pipes/chains, marks, escapes, and overflow. Annotation slot contents are plain text. Complex Markdown inside the annotated base should use explicit brackets when plain text is enough, or be handled in a future AST-level adapter as a rendering policy that preserves the same annotation model.
-
-## Design Intent
-
-Inline Annotation is meant to be a small cross-editor syntax, not a Logseq-only workaround. The stable surface is the source syntax, the two-slot model, escaping rules, rendering modifiers, and compatibility fixtures. HTML output is the first renderer, not the entire standard.
+- [SPEC.md](./SPEC.md): normative syntax and compatibility contract.
+- [docs/ROADMAP.md](./docs/ROADMAP.md): architecture and release direction.
+- [CHANGELOG.md](./CHANGELOG.md): package history.
+- [examples/playground.html](./examples/playground.html): generated core demo.
+- [examples/before-after.html](./examples/before-after.html): visual examples.
 
 ## License
 

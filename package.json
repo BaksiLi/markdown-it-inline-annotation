@@ -1,7 +1,7 @@
 {
   "name": "markdown-it-inline-annotation",
-  "version": "0.3.2",
-  "description": "markdown-it plugin for [base]^^(ruby) Inline Annotation: ruby/furigana, bouten, underline, and two-slot glosses.",
+  "version": "0.3.3",
+  "description": "Inline Annotation parser, HTML renderer, and markdown-it plugin for ruby/furigana, bouten, line marks, and two-slot glosses.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -26,6 +26,7 @@
       "require": "./dist/core.js"
     },
     "./fixtures/html-render.json": "./fixtures/html-render.json",
+    "./fixtures/segment-boundaries.json": "./fixtures/segment-boundaries.json",
     "./styles.css": "./styles/inline-annotation.css"
   },
   "scripts": {
@@ -72,5 +73,10 @@
   },
   "peerDependencies": {
     "markdown-it": ">=12.0.0"
+  },
+  "peerDependenciesMeta": {
+    "markdown-it": {
+      "optional": true
+    }
   }
 }

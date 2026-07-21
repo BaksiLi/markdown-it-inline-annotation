@@ -11,6 +11,8 @@ const {
   findInlineAnnotationModelsBeforeMarkdown,
 } = require("./dist/index.js");
 const htmlRenderFixtureCorpus = require("./fixtures/html-render.json");
+const segmentBoundaryFixtureCorpus = require("./fixtures/segment-boundaries.json");
+const packageManifest = require("./package.json");
 
 function md(options) {
   return new MarkdownIt().use(inlineAnnotationPlugin, options);
@@ -95,6 +97,42 @@ test("shared fixture corpus is well formed", () => {
       assert.ok(Number.isInteger(count.count) && count.count >= 0, `fixture ${fixture.id} count must be a non-negative integer`);
     }
   }
+});
+
+test("segment boundary fixture corpus is well formed", () => {
+  assert.equal(segmentBoundaryFixtureCorpus.version, 1);
+  assert.deepEqual(Object.keys(segmentBoundaryFixtureCorpus.expectations).sort(), [
+    "may-render",
+    "must-preserve",
+    "must-render",
+  ]);
+  const allowedKinds = new Set(Object.keys(segmentBoundaryFixtureCorpus.runKinds));
+  const allowedExpectations = new Set(Object.keys(segmentBoundaryFixtureCorpus.expectations));
+  const ids = new Set();
+
+  for (const fixture of segmentBoundaryFixtureCorpus.cases) {
+    assert.ok(fixture.id && fixture.name, "boundary fixture id and name are required");
+    assert.ok(!ids.has(fixture.id), `duplicate boundary fixture id ${fixture.id}`);
+    ids.add(fixture.id);
+    assert.ok(allowedExpectations.has(fixture.expectation), `unknown expectation in ${fixture.id}`);
+    assert.ok(Array.isArray(fixture.runs) && fixture.runs.length > 0, `${fixture.id} needs runs`);
+    for (const run of fixture.runs) {
+      assert.ok(allowedKinds.has(run.kind), `unknown run kind ${run.kind} in ${fixture.id}`);
+      assert.ok(typeof run.text === "string" && run.text.length > 0, `${fixture.id} run text is required`);
+    }
+
+    const source = fixture.runs.map((run) => run.text).join("");
+    assert.equal(
+      findInlineAnnotationModels(source).length,
+      1,
+      `${fixture.id} must be valid when presented as one contiguous source segment`
+    );
+  }
+});
+
+test("markdown-it is an optional peer for core-only consumers", () => {
+  assert.equal(packageManifest.peerDependencies["markdown-it"], ">=12.0.0");
+  assert.equal(packageManifest.peerDependenciesMeta["markdown-it"].optional, true);
 });
 
 for (const fixture of htmlRenderFixtureCorpus.cases) {
@@ -346,6 +384,36 @@ test("emphasis still wraps annotation", () => {
   hasAll(html, ["<strong>", "<rt>かんじ</rt>", "</strong>"]);
 });
 
+test("strikethrough still wraps annotation", () => {
+  const html = inline("~~[漢字]^^(かんじ)~~");
+  hasAll(html, ["<s>", "<rt>かんじ</rt>", "</s>"]);
+  hasNone(html, ["~~"]);
+});
+
+test("markdown-it escapes before an annotation stay host-owned", () => {
+  const html = inline("\\# [漢字]^^(かんじ)");
+  hasAll(html, ["# ", "<rt>かんじ</rt>"]);
+  hasNone(html, ["\\#"]);
+});
+
+test("reserved markers remain available to another inline rule", () => {
+  function markerPlugin(markdownIt) {
+    markdownIt.inline.ruler.before("text", "inline_annotation_test_marker", (state, silent) => {
+      if (!state.src.startsWith("::", state.pos)) return false;
+      if (!silent) {
+        const token = state.push("html_inline", "", 0);
+        token.content = "<kbd>::</kbd>";
+      }
+      state.pos += 2;
+      return true;
+    });
+  }
+
+  const markdownIt = new MarkdownIt().use(inlineAnnotationPlugin).use(markerPlugin);
+  const html = markdownIt.renderInline(":: [漢字]^^(かんじ)");
+  hasAll(html, ["<kbd>::</kbd>", "<rt>かんじ</rt>"]);
+});
+
 test("custom options", () => {
   const html = inline("[漢字]^^(かんじ)", { classPrefix: "x", fallbackParens: "[]" });
   hasAll(html, ['<ruby class="x-ruby x-ruby-over"', "<rp>[</rp>", "<rp>]</rp>"]);
@@ -415,11 +483,14 @@ test("model exposes extra pipe overflow range", () => {
 test("package subpath exports expose core and fixtures", () => {
   const core = require("markdown-it-inline-annotation/core");
   const corpus = require("markdown-it-inline-annotation/fixtures/html-render.json");
+  const boundaries = require("markdown-it-inline-annotation/fixtures/segment-boundaries.json");
   assert.equal(typeof core.renderInlineAnnotationsToHtml, "function");
   assert.equal(typeof core.findInlineAnnotationModel, "function");
   assert.equal(typeof core.findInlineAnnotationModels, "function");
   assert.equal(corpus.version, 1);
   assert.ok(corpus.cases.length > 0);
+  assert.equal(boundaries.version, 1);
+  assert.ok(boundaries.cases.length > 0);
 });
 
 test("playground embeds fixture data without executable HTML sentinels", () => {

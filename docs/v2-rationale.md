@@ -94,13 +94,11 @@ unchanged:
 | Line (under) | `ia-underline`, plus `ia-underline-wavy` / `ia-underline-double` |
 | Line (over) | `ia-overline`, plus `ia-overline-wavy` / `ia-overline-double` |
 
-## Open questions
+## Resolved decisions
 
-- Confirm `ia-overline*` class names (vs. a side-modifier scheme like
-  `ia-line-over`).
-- Whether pipe-overflow is surfaced only by lint or also by a visible renderer
-  marker.
-- Resolved in `0.3.2`: mixed overline/underline styles use nested spans because
+- `ia-overline*` is the canonical over-side class family.
+- Pipe overflow stays visible in rendered text and may also produce a diagnostic.
+- Since `0.3.2`, mixed overline/underline styles use nested spans because
   CSS exposes only one `text-decoration-style` per element.
 
 ## Host compatibility
@@ -108,7 +106,7 @@ unchanged:
 v2 adds no new syntax, so the host-conflict surface is identical to v0.x: Logseq
 still pre-parses `^^x^^` / `_x_` (handled at the adapter via macro/HTML
 conversion); Obsidian and VS Code still rely on the mandatory `(` after the
-operator. See [`ROADMAP.md`](./ROADMAP.md) → Host Compatibility Policy.
+operator. See [`ROADMAP.md`](./ROADMAP.md) under Boundary Policy and Host Notes.
 
 ## Markdown field boundaries
 

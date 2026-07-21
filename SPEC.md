@@ -205,12 +205,42 @@ every nested substring as general Markdown. Hosts may add richer Markdown
 rendering as an explicit adapter or rendering policy only if the plain
 annotation model and source ranges remain unchanged.
 
+### Source Segments and Rich-Text Runs
+
+The grammar operates on one contiguous source segment. DOM text nodes,
+rich-text runs, and their formatting metadata are host-layer structures, not
+characters in the Inline Annotation grammar.
+
+A host adapter:
+
+- **must** parse a complete valid expression contained in one host-eligible
+  source run;
+- **may** concatenate adjacent runs when every crossed boundary is semantically
+  transparent and replacement preserves the surrounding host structure;
+- **must not** concatenate across formatting, highlight, link, code, or another
+  semantic boundary when doing so would discard or reinterpret that boundary;
+- **may** conservatively preserve an expression split across transparent runs.
+
+A semantic wrapper around the whole expression is not a crossed boundary. For
+example, an expression entirely inside one strong-emphasis run may render while
+the outer emphasis remains. Hosts may still reserve entire contexts such as
+links and code. By contrast, a plain run followed by a bold run in the middle
+of an annotation slot must not be flattened into one plain string just to
+produce a match.
+
+When an adapter declines to join runs, it must preserve the original source and
+host decoration. This policy does not change core parsing: if the same text is
+later supplied as one contiguous Markdown source string, it remains a valid
+Inline Annotation expression.
+
 ## Non-Normative Guidance
 
 ### Conformance Fixtures
 
-The shared host-neutral fixture corpus lives in `fixtures/html-render.json`.
-Adapters should run this corpus before adding host-specific tests. Fixtures
+The shared host-neutral rendering corpus lives in `fixtures/html-render.json`.
+The source-segment and rich-text policy corpus lives in
+`fixtures/segment-boundaries.json`. Adapters should run the applicable corpus
+before adding host-specific tests. Fixtures
 assert semantic fragments and substring counts rather than exact serialized
 HTML, so markdown-it, Logseq, Obsidian, and future unified adapters can differ
 in wrapper markup or attribute ordering while preserving the same syntax

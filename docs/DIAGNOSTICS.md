@@ -17,6 +17,7 @@ implementation to emit diagnostics.
 | `IA007_MARK_ESCAPING_AMBIGUITY` | info | A slot exactly matches a decoration mark (`..`, `.-`, `.~`, `.=`) where literal ruby text may have been intended. | Escape the leading dot for literal text, such as `[x]^^(\.-)`. |
 | `IA008_RENDER_POLICY_ALIGNMENT` | info | A space-separated annotation could render differently under `spaceAlignment` policies. | Choose an adapter policy or configure `spaceAlignment` explicitly. |
 | `IA009_HOST_SKIP_CONTEXT` | info | Inline Annotation syntax appears inside a host-owned token stream such as a link, code span, raw HTML, or Live Preview token that the adapter does not parse. | Leave it literal or use a host-supported workflow. |
+| `IA010_SEMANTIC_RUN_BOUNDARY` | info | A syntactically valid expression would require concatenating differently decorated rich-text or DOM runs. | Preserve the runs, or normalize them explicitly before parsing. |
 
 ## Checklist Coverage
 

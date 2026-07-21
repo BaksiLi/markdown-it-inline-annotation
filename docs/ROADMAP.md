@@ -1,231 +1,131 @@
 # Inline Annotation Roadmap
 
-Portable Markdown extension for ruby, furigana, bouten, over/under line marks,
-and two-slot text annotations.
+Inline Annotation is a portable Markdown extension for ruby/furigana,
+over/under glosses, bouten, and line marks. Its durable center is the syntax,
+semantic model, fixtures, and `ia-*` class contract. Host workarounds stay in
+host adapters.
 
-The durable center is the **syntax, semantic model, fixtures, and `ia-*` HTML
-class contract** — not shared code. Each host adapter owns its own parser
-timing, selection APIs, escaping quirks, and editor workflow.
+## Current Implementations
 
-Specs:
-
-- [`../SPEC.md`](../SPEC.md) — canonical syntax (v2, shipped by `0.2.0`).
-- [`v2-rationale.md`](./v2-rationale.md) — why v2 differs from v1 + core layering.
-- [`SPEC-v1.md`](./SPEC-v1.md) — archived v1 (shipped by `0.1.x` / Logseq `0.5.x`).
-
-## Status
-
-| Project | Role | Status |
+| Project | Role | Current line |
 | --- | --- | --- |
-| `markdown-it-inline-annotation` | Core spec + parser/model + markdown-it adapter | `0.3.1` (v2 + source ranges + multi-model scanner) |
-| `logseq-furigana-ruby` | Reference plugin (independent parser) | `0.6.0` line (v2), emits canonical `ia-*`; refresh pending |
-| `vscode-inline-annotation` | Preview-only adapter via `extendMarkdownIt` | `0.3.1` thin adapter tracking markdown-it |
-| `obsidian-inline-annotation` | Reading-view postprocessor + Live Preview prototype | `0.3.5` prototype, core-first + syntax-tree context |
-| remark/unified | AST adapter | deferred |
+| `markdown-it-inline-annotation` | canonical spec, parser/model, HTML renderer, markdown-it adapter | `0.3.3` next release |
+| `logseq-furigana-ruby` | independent parser, macros, conversions, Logseq renderer | `0.6.1` |
+| `obsidian-inline-annotation` | Reading view and Live Preview | `0.3.9` |
+| `vscode-inline-annotation` | thin built-in Markdown preview adapter | `0.3.2` |
+| remark/unified | AST adapter | deferred until a real pipeline needs it |
 
-Phase detail lives in `CHANGELOG.md`. This file keeps the durable decisions.
+Inline Annotation v2 is implemented across the active adapters. Core `0.3.x`
+adds source ranges and multi-model scanning for editor integrations.
 
-v2 changes (symmetric over/under line marks, alignment as a rendering
-enhancement, pipe-overflow rendered as text) have shipped across the active
-adapters. `0.3.x` adds the source-range model and multi-model scanner APIs
-needed by editor-layer adapters such as Obsidian Live Preview.
+## Contracts
 
-## Architecture Principles
+The [spec](../SPEC.md) owns:
 
-1. **Spec first, shared runtime later.** Shared fixtures and a clear spec beat
-   premature code reuse. Extract a shared package only after two non-identical
-   adapters prove the boundary.
-2. **Keep the core narrow.** The reusable core may parse source, produce source
-   ranges, expose a neutral model, escape user text, and render canonical HTML.
-   It must not contain host workarounds.
-3. **Host adapters own host behavior.** Logseq parser conflicts, Obsidian
-   reading-view timing, markdown-it rule ordering, future micromark state — all
-   outside the core.
-4. **Document unavoidable conflicts instead of hiding them.** When a host parses
-   before plugins, the right answer is a reliable workflow, not a fragile
-   illusion of full control.
-5. **The public contract is source syntax plus semantic HTML.** Canonical output
-   classes are `ia-*`. Raw HTML may differ by adapter; slot meaning, escaping,
-   and class semantics must not.
+- bracketed and abbreviated source syntax;
+- over/under slot assignment, pipe and chain behavior;
+- decoration marks, escaping, nesting, and visible overflow;
+- source ranges and the `ia-*` semantic class contract;
+- source-segment and rich-text boundary requirements.
 
-## Layer Boundaries
+The core may parse source, produce models and ranges, escape user text, render
+canonical HTML, and export fixtures. It does not own Logseq parser conflicts,
+Obsidian editor behavior, markdown-it rule ordering, or future mdast policy.
 
-**Spec defines:** source syntax (bracketed/abbreviated, pipe, chaining),
-two-slot model, decoration marks, escaping, source ranges, safety, the `ia-*`
-class contract, and alignment as a non-semantic rendering enhancement.
+Adapters decide where parsing is allowed. They must preserve host-owned links,
+code, raw HTML, and semantic rich-text boundaries.
 
-**Spec does not define:** how a host intercepts Markdown, selection/conversion
-commands, DOM mutation timing, exact whitespace, or rich Markdown rendering
-inside annotation fields.
+## Boundary Policy
 
-**Core may:** parse to a neutral model, preserve source ranges, escape text,
-render class-mode and inline-style HTML, expose fixtures.
+The core receives one contiguous source string. A rich-text or DOM adapter:
 
-**Core may not:** hold Logseq macro/conflict workarounds, Obsidian Live Preview
-behavior, markdown-it rule ordering, remark/micromark state, or UI commands.
+1. must render a complete valid expression contained in one host-eligible
+   source run;
+2. may join adjacent runs only when their split is semantically transparent;
+3. must not join across formatting, highlight, link, code, or another semantic
+   boundary if replacement would discard or reinterpret it;
+4. may conservatively leave a transparent split unrendered.
 
-**Adapters** translate host capabilities into the spec model (markdown-it inline
-tokenizer; Logseq DOM + slash-command conversion; VS Code preview-only;
-Obsidian reading-view postprocessor; remark/mdast when a pipeline needs it).
+An outer formatted run containing the entire expression is valid; crossing in
+or out of a differently decorated run is not. The canonical cases live in
+`fixtures/segment-boundaries.json`.
 
-## Host Compatibility Policy
+## Testing
 
-Compatibility means "the best reliable behavior in that host," not "every host
-accepts every source string in the same editing context."
+Conformance has three layers:
 
-- **Logseq** parses its own Markdown before plugins run, so multiple inline
-  `^^()` / `^_()` forms in one block can collide with Logseq highlight/italic.
-  The core cannot fix this. The adapter provides documentation, selected-block
-  conversion commands, macro output for editable content, HTML output for fixed
-  content, and code-span-preserving tests.
-- **VS Code** is the opposite end: its preview exposes a markdown-it hook, so the
-  adapter is a thin shell around the existing plugin. No preview scripts, custom
-  webviews, decorations, hover, completion, or diagnostics until proven demand.
+1. `fixtures/html-render.json`: portable parse and semantic HTML behavior.
+2. `fixtures/segment-boundaries.json`: contiguous source and rich-text run policy.
+3. Adapter tests: markdown-it composition, Obsidian DOM/Live Preview, Logseq
+   conversion and parser conflicts, and VS Code preview wiring.
 
-This policy applies to future hosts: document the conflict, offer the least
-surprising workaround.
+Rendering-policy fixtures may differ by declared options such as
+`spaceAlignment`. Host skips must be explicit; adapters must not silently weaken
+semantic cases.
 
-## Testing Strategy
+Desktop automation remains a release smoke test for plugin loading and visible
+output, not the primary correctness suite.
 
-Three fixture layers:
+## Release Sequence
 
-1. **Spec fixtures** — host-neutral, shared by all implementations. Canonical
-   corpus: `fixtures/html-render.json`. Logseq keeps a checked-in copy
-   (`src/shared-html-render-fixtures.json`) as a transition mechanism until a
-   second non-Logseq adapter justifies importing or a monorepo. These assert
-   semantic fragments / counts, not exact serialized HTML. Cases are classified
-   as `semantic`, `rendering-policy`, or `host-skip`; semantic cases must not
-   depend on inline styles, class order, or default renderer policy.
-   Checklist coverage includes both overflow forms: chained overflow
-   `[a]^^(x|y)^_(z)` and extra pipe overflow `[a]^^(x|y|z)`.
-2. **Adapter fixtures** — integration behavior (markdown-it parsing, Obsidian
-   DOM replacement, remark AST).
-3. **Host workflow fixtures** — host-specific behavior (Logseq macro conversion,
-   code protection, known parser conflicts) — kept in `src/parser.test.ts`.
+### 0.3.3 core
 
-App-level manual / Computer Use smoke tests are for release checks only (plugin
-loads, commands appear, conversion works, rendered output appears after reload).
-Do not use desktop UI automation as the main correctness suite.
+- Make `markdown-it` an optional peer so `/core` consumers do not install it.
+- Preserve markdown-it escapes, strikethrough, and extension marker boundaries.
+- Publish the shared segment-boundary corpus.
+- Verify a packed `/core` install with no `markdown-it` present.
 
-## Spec Ownership
+After the core release, refresh adapter lockfiles and publish adapters that
+bundle or ship the fixed package. VS Code remains thin; Obsidian and Logseq keep
+their host-specific boundary tests.
 
-Short term: `markdown-it-inline-annotation/SPEC.md` is canonical (the package is
-published, the repo is neutral, the parser and examples live here). Other
-plugins link to it.
+### 0.4 neutral core boundary
 
-Long term: move the spec to a neutral `inline-annotation` repo/org when a second
-non-Logseq adapter ships. Possible monorepo shape:
+External core-only production use now proves that the parser/model is a real
+integration boundary. Prepare `@inline-annotation/core` as a dependency-free
+package while preserving `markdown-it-inline-annotation/core` as a compatibility
+re-export.
+
+Before extraction:
+
+- add model-level fixtures independent of HTML serialization;
+- settle public parser/model names and source-range invariants;
+- decide whether fixtures live with the neutral core or in a small conformance
+  package;
+- automate release tags and adapter update checks.
+
+The markdown-it package should then become a small adapter depending on the
+neutral core.
+
+### remark/unified
+
+Build `micromark-extension-inline-annotation`, `mdast-util-inline-annotation`,
+and `remark-inline-annotation` only when a concrete unified/MDX pipeline needs
+them. Source ranges and model fixtures should make that port mechanical.
+
+AST adapters are the right place to experiment with rich Markdown children in
+the base. Annotation slots remain plain text unless a later spec version defines
+a separate rich-slot contract.
+
+## Host Notes
+
+- **Logseq:** multiple `^^()` forms may collide with highlight parsing. Macros
+  and conversion commands are the reliable workflow.
+- **Obsidian:** Reading view sees rendered DOM; Live Preview sees CodeMirror
+  source. Both share the core model but keep separate host policies.
+- **VS Code:** use `extendMarkdownIt`; no scripts, webviews, or editor features
+  until real demand justifies them.
+
+## Project Shape
+
+The spec currently lives in this repository because the package, parser,
+fixtures, and examples are released together. A neutral repository or monorepo
+becomes worthwhile when `@inline-annotation/core` is extracted:
 
 ```text
 spec/  packages/core/  packages/markdown-it/  packages/remark/
-plugins/obsidian/  plugins/logseq/  apps/demo/
+plugins/obsidian/  plugins/logseq/  plugins/vscode/  examples/
 ```
 
-Do not move the spec before the adapter boundary is proven.
-
-## Future Work
-
-### Adapter conformance drift
-
-Keep the active adapters aligned with the shared fixture taxonomy:
-
-- **VS Code** should stay a thin `extendMarkdownIt` wrapper and run the shared
-  corpus from the npm package.
-- **Obsidian** should use the shared core model for both Reading view and Live
-  Preview, skipping only documented host or rendering-policy cases.
-- **Logseq** should periodically refresh its vendored corpus copy, or replace it
-  with the monorepo/shared package source when that exists.
-
-Recent alignment:
-
-- Core `0.3.1` exposes single-match and multi-match model scanners.
-- Obsidian `0.3.5` consumes the shared scanner in Live Preview and uses
-  CodeMirror syntax-tree ranges as host context after core annotation models are
-  found.
-- VS Code `0.3.1` remains a thin `extendMarkdownIt` adapter and validates the
-  shared corpus through the package it tracks.
-
-Current milestone: **Logseq v2 refresh and adapter drift closure**. Obsidian has
-proved the core-first boundary: core finds Inline Annotation models, host syntax
-only validates context. The next useful increment is refreshing Logseq's
-vendored fixture corpus and parser behavior against the current v2 contract
-without forcing it into Obsidian's CodeMirror strategy.
-
-### Online demo (shipped, iterate later)
-
-`examples/playground.html` is generated from the core renderer and the shared
-fixture corpus (source textarea, live preview, HTML output, fixture menu,
-class-mode toggle). It stays a single generated artifact — no separate website
-dataset to maintain. Fold it into the real site when the blog post lands.
-
-### Phase 4 — shared core package (deferred)
-
-Extract `@inline-annotation/core` only when all hold: markdown-it and Obsidian
-use the same semantic parser successfully; Logseq adopts it cleanly or stays a
-documented adapter; fixtures are split into spec/adapter/host layers; the public
-API is stable enough for remark. Likely API:
-
-```ts
-parseInlineAnnotation(input, options) -> AnnotationMatch[]
-renderAnnotationHtml(model, options) -> string
-renderInlineAnnotationsToHtml(input, options) -> string
-```
-
-The API must expose source ranges and avoid host assumptions.
-
-### Phase 5 — remark/unified (deferred)
-
-`micromark-extension-inline-annotation`, `mdast-util-inline-annotation`,
-`remark-inline-annotation`, once a concrete site or MDX pipeline needs it.
-Prepare now by keeping source ranges available, separating parse semantics from
-HTML rendering, and avoiding syntax that cannot be expressed as a real inline
-tokenizer.
-
-AST-level adapters are the right place to explore richer annotated bases such as
-emphasis or links inside the base span. That support must remain a host/rendering
-policy: Markdown syntax can enrich rendered children, but it must not change
-slot assignment, mark classification, escaping, overflow diagnostics, or source
-ranges. Annotation slots stay plain text unless a future spec version defines a
-separate rich-slot contract.
-
-### Obsidian Live Preview — active prototype
-
-Live Preview via CodeMirror 6 decorations is the boundary between "preview" and
-"real editor." The first prototype uses replacement widgets backed by the shared
-source-range model and restores source while the cursor or selection touches an
-annotation. The current implementation plans decorations per source line, scans
-core annotation models first, and uses CodeMirror syntax-tree ranges only as
-host context. The remaining hard parts are IME, partial-selection ergonomics,
-undo/redo behavior, and richer edit-mode rendering. Keep this work in the
-Obsidian adapter; the shared core should expose model/range data but not editor
-policy.
-
-## Tooling Policy
-
-No ESLint yet — both repos are small and compile under `strict`; lint would add
-config churn without catching the parser/adapter risks that matter. Strict
-TypeScript builds plus shared fixture validation are the primary static checks.
-Revisit when shared runtime is extracted, frontend surface grows, or CI needs
-consistent style across multiple packages (i.e. with the monorepo).
-
-Diagnostic IDs are reserved in [`DIAGNOSTICS.md`](./DIAGNOSTICS.md) so future
-lint/editor tooling can converge on names without forcing a lint engine into
-the current core package.
-
-## Safety Model
-
-- The current core treats parsed base and annotation slot text as plain source
-  text; renderers must escape user-controlled text.
-- Annotation content does not parse arbitrary Markdown, and Markdown syntax is
-  not part of slot semantics.
-- Raw HTML handling is adapter-specific.
-
-Future AST adapters may support richer base content, but only explicitly, as a
-rendering policy, and with separate tests.
-
-## Naming
-
-- Brand: **Inline Annotation**
-- Current package: `markdown-it-inline-annotation`
-- Future shared package, if justified: `@inline-annotation/core`
-- Canonical spelling: `bouten`
+Brand: **Inline Annotation**. Host listings may use **Inline Ruby Annotation**
+for discoverability. Canonical spelling: `bouten`.

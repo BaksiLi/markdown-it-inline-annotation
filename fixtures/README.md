@@ -1,7 +1,10 @@
 # Inline Annotation Fixtures
 
-`html-render.json` is the shared conformance corpus for host-neutral Inline
-Annotation HTML rendering.
+The package ships two shared conformance corpora:
+
+- `html-render.json` covers host-neutral parsing and semantic HTML rendering.
+- `segment-boundaries.json` defines when a rich-text or DOM host may join text
+  runs before parsing Inline Annotation.
 
 The corpus intentionally checks semantic HTML fragments and counts instead of
 full serialized HTML. Different adapters may emit attributes in different
@@ -43,26 +46,40 @@ wrappers independently. They should also avoid inputs where default rendering
 policy changes the asserted structure; put those cases under `rendering-policy`
 with explicit `options` instead.
 
-This file is currently canonical in the markdown-it package. Host adapters can
-copy it until the project moves fixtures into a neutral package or monorepo.
+These files are canonical in the markdown-it package until the core and
+conformance data move to a neutral package or monorepo.
 
 ## Sync Policy
 
-The current cross-repo copy is intentional but temporary:
+Npm-based adapters import published fixture exports when available. The new
+segment corpus is checked into adapters while `0.3.3` is unreleased; switch
+those copies to the package export when their core lockfiles advance. Logseq
+keeps a checked-in copy because its parser is intentionally independent.
 
-1. Short term: adapters keep a checked-in copy and run it in their own test
-   suites. This keeps each package self-contained and avoids a shared package
-   before the adapter boundary is proven.
-2. Middle term: once a second non-Logseq adapter exists, host adapters should
-   import the fixture corpus from the published package instead of copying it.
-   The corpus is already included in the npm `files` list and exported as
-   `markdown-it-inline-annotation/fixtures/html-render.json`.
-3. Long term: if the project becomes a monorepo or a neutral `inline-annotation`
-   package, move the corpus next to the spec and make every adapter consume that
-   single source.
+Long term, a neutral core/conformance package or monorepo should provide one
+fixture source to every adapter.
 
 Add host-neutral cases here first. If a case depends on a host parser, command
 workflow, DOM timing, or editor-specific escaping behavior, keep it in that
 adapter's own tests. If a host copies this corpus and temporarily cannot run a
 case because of a known host limitation, mark that copied case as `host-skip`
 with a `hostSkip` note instead of deleting or silently weakening it.
+
+## Segment Boundary Policy
+
+The core parses a contiguous source string. Rich-text runs and DOM nodes belong
+to host adapters, so `segment-boundaries.json` separates three obligations:
+
+- `must-render`: the complete expression is in one host-eligible run and must
+  render.
+- `may-render`: the expression crosses only semantically transparent splits;
+  an adapter may join those runs or conservatively preserve them.
+- `must-preserve`: joining would cross formatting, link, code, highlight, or
+  another semantic boundary, so the adapter must leave source and decoration
+  intact.
+
+A semantic wrapper around the whole expression is not a crossing. For example,
+an entire expression inside one strong-emphasis run may render while retaining
+the outer emphasis. Hosts may still reserve contexts such as links and code.
+The forbidden operation is concatenating differently decorated runs and
+silently discarding their boundary.

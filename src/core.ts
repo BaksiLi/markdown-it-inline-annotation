@@ -649,7 +649,9 @@ function parseAt(input: string, start: number, max: number, options: ResolvedOpt
 }
 
 function isMarkdownBlocker(ch: string): boolean {
-  return ch === "`" || ch === "*" || ch === "_" || ch === "<" || ch === "&" || ch === "!" || ch === "\n" || ch === "\r";
+  // Match markdown-it's text-rule terminators. Scanning across one of these
+  // would turn host syntax into a plain text token before its own rule runs.
+  return ch === "\r" || /[\n!#$%&*+\-:<=>@[\\\]^_`{}~]/.test(ch);
 }
 
 function findInlineAnnotationModelIn(
@@ -663,7 +665,6 @@ function findInlineAnnotationModelIn(
   for (let i = start; i < max; i++) {
     const model = parseAt(input, i, max, options);
     if (model) return model;
-    if (stopBeforeMarkdown && input[i] === "[" && !isEscaped(input, i)) return null;
     if (stopBeforeMarkdown && isMarkdownBlocker(input[i])) return null;
   }
   return null;
