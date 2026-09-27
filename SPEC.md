@@ -2,11 +2,13 @@
 
 A syntax specification for ruby, furigana, bouten, and text decorations.
 
-> **Version: v2.** v2 is almost a superset of v1 — it makes decoration marks
-> symmetric, reclassifies space alignment as a rendering enhancement, and stops
-> silently dropping over-capacity input. Reference implementations:
-> `markdown-it-inline-annotation` `0.2.0+` and `logseq-furigana-ruby` `0.6.0+`.
-> `0.1.x` / `0.5.x` implement v1, archived at [`docs/SPEC-v1.md`](./docs/SPEC-v1.md).
+> **Version: v2 · Status: Stable.** v2 is almost a superset of v1 — it makes
+> decoration marks symmetric, reclassifies space alignment as a rendering
+> enhancement, and stops silently dropping over-capacity input. Active
+> implementations include the markdown-it, Logseq, Obsidian, VS Code, and
+> Sätteri adapters. `markdown-it-inline-annotation` `0.1.x` and
+> `logseq-furigana-ruby` `0.5.x` implement v1, archived at
+> [`docs/SPEC-v1.md`](./docs/SPEC-v1.md).
 
 Inline Annotation is the shared syntax family behind the Logseq Furigana Ruby
 plugin, the markdown-it implementation, the Obsidian and VS Code adapters, and
@@ -24,6 +26,12 @@ explicitly use normative language.
 The words "must", "should", and "may" are used in their ordinary specification
 sense: "must" is required for conformance, "should" is recommended unless a host
 constraint makes it impractical, and "may" is optional.
+
+v2 syntax, the two-slot model, source-range semantics, and the `ia-*` class
+contract are frozen. Compatible clarifications and additional conformance cases
+may be added without changing the version. A change that alters a valid model,
+reassigns a slot, changes a public range, or requires different semantic classes
+needs a new specification version.
 
 ## Normative Specification
 
@@ -147,6 +155,31 @@ literal text, not a slot separator:
 [x]^^(\.-)
 ```
 
+### Source Model and Ranges
+
+Portable parser APIs and model fixtures use zero-based, end-exclusive offsets
+measured in UTF-16 code units into the exact original source string. This is the
+same indexing convention as JavaScript `String.prototype.slice`. A host may use
+bytes, Unicode scalar values, or line/column pairs internally, but its adapter
+must convert them at the portable API and conformance-fixture boundary.
+
+For every model:
+
+- `model.source` must equal the original source slice from `model.start` to
+  `model.end`;
+- `base.raw`, every slot `raw`, and every overflow `raw` must equal their
+  corresponding original source slices, including backslash escapes;
+- the base range excludes bracket delimiters, and slot ranges exclude their
+  operator, parentheses, and pipe separators;
+- pipe overflow belongs to the matched model and includes the first unassigned
+  pipe, while a chain attempted after both slots are filled remains outside the
+  model; and
+- a multi-model scan returns models in source order without overlap.
+
+Ranges describe source ownership, not rendered or unescaped text. Adapters must
+not recompute them from HTML, decoded text, or a host AST after source spelling
+has been lost.
+
 ### Degenerate Behavior
 
 | Input | Result |
@@ -237,9 +270,10 @@ Inline Annotation expression.
 
 ### Conformance Fixtures
 
-The shared host-neutral rendering corpus lives in `fixtures/html-render.json`.
-The source-segment and rich-text policy corpus lives in
-`fixtures/segment-boundaries.json`. Adapters should run the applicable corpus
+The shared parser-model corpus lives in `fixtures/models.json`, the
+host-neutral rendering corpus in `fixtures/html-render.json`, and the
+source-segment and rich-text policy corpus in
+`fixtures/segment-boundaries.json`. Adapters should run the applicable corpora
 before adding host-specific tests. Fixtures
 assert semantic fragments and substring counts rather than exact serialized
 HTML, so markdown-it, Logseq, Obsidian, and future unified adapters can differ

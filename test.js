@@ -11,6 +11,7 @@ const {
   findInlineAnnotationModelsBeforeMarkdown,
 } = require("./dist/index.js");
 const htmlRenderFixtureCorpus = require("./fixtures/html-render.json");
+const modelFixtureCorpus = require("./fixtures/models.json");
 const segmentBoundaryFixtureCorpus = require("./fixtures/segment-boundaries.json");
 const packageManifest = require("./package.json");
 
@@ -127,6 +128,53 @@ test("segment boundary fixture corpus is well formed", () => {
       1,
       `${fixture.id} must be valid when presented as one contiguous source segment`
     );
+  }
+});
+
+test("model fixture corpus is well formed and matches the parser", () => {
+  assert.equal(modelFixtureCorpus.version, 1);
+  assert.equal(modelFixtureCorpus.offsetEncoding, "utf-16");
+  assert.match(modelFixtureCorpus.rangeConvention, /zero-based/i);
+  assert.match(modelFixtureCorpus.rangeConvention, /end-exclusive/i);
+  assert.deepEqual(modelFixtureCorpus.fixtureSchema.required, [
+    "id",
+    "category",
+    "name",
+    "input",
+    "models",
+  ]);
+
+  const ids = new Set();
+  for (const fixture of modelFixtureCorpus.cases) {
+    for (const field of modelFixtureCorpus.fixtureSchema.required) {
+      assert.notEqual(fixture[field], undefined, `model fixture ${fixture.id || "(missing id)"} ${field} is required`);
+    }
+    assert.ok(!ids.has(fixture.id), `duplicate model fixture id ${fixture.id}`);
+    ids.add(fixture.id);
+    assert.ok(typeof fixture.input === "string", `model fixture ${fixture.id} input must be a string`);
+    assert.ok(Array.isArray(fixture.models), `model fixture ${fixture.id} models must be an array`);
+
+    const actual = findInlineAnnotationModels(
+      fixture.input,
+      0,
+      fixture.input.length,
+      fixture.options
+    );
+    assert.deepEqual(actual, fixture.models, `model fixture ${fixture.id} must match the core parser`);
+
+    let previousEnd = 0;
+    for (const model of fixture.models) {
+      assert.ok(Number.isInteger(model.start) && Number.isInteger(model.end));
+      assert.ok(model.start >= 0 && model.start <= model.end && model.end <= fixture.input.length);
+      assert.ok(model.start >= previousEnd, `model fixture ${fixture.id} models must not overlap`);
+      assert.equal(model.source, fixture.input.slice(model.start, model.end));
+      for (const range of [model.base, ...model.slots, ...model.overflow]) {
+        assert.ok(Number.isInteger(range.start) && Number.isInteger(range.end));
+        assert.ok(range.start >= model.start && range.start <= range.end && range.end <= model.end);
+        assert.equal(range.raw, fixture.input.slice(range.start, range.end));
+      }
+      previousEnd = model.end;
+    }
   }
 });
 
@@ -483,12 +531,16 @@ test("model exposes extra pipe overflow range", () => {
 test("package subpath exports expose core and fixtures", () => {
   const core = require("markdown-it-inline-annotation/core");
   const corpus = require("markdown-it-inline-annotation/fixtures/html-render.json");
+  const models = require("markdown-it-inline-annotation/fixtures/models.json");
   const boundaries = require("markdown-it-inline-annotation/fixtures/segment-boundaries.json");
   assert.equal(typeof core.renderInlineAnnotationsToHtml, "function");
   assert.equal(typeof core.findInlineAnnotationModel, "function");
   assert.equal(typeof core.findInlineAnnotationModels, "function");
   assert.equal(corpus.version, 1);
   assert.ok(corpus.cases.length > 0);
+  assert.equal(models.version, 1);
+  assert.equal(models.offsetEncoding, "utf-16");
+  assert.ok(models.cases.length > 0);
   assert.equal(boundaries.version, 1);
   assert.ok(boundaries.cases.length > 0);
 });

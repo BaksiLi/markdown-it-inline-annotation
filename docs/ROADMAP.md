@@ -21,7 +21,7 @@ adds source ranges and multi-model scanning for editor integrations.
 
 ## Contracts
 
-The [spec](../SPEC.md) owns:
+The stable [v2 spec](../SPEC.md) owns:
 
 - bracketed and abbreviated source syntax;
 - over/under slot assignment, pipe and chain behavior;
@@ -53,11 +53,12 @@ or out of a differently decorated run is not. The canonical cases live in
 
 ## Testing
 
-Conformance has three layers:
+Conformance has four layers:
 
-1. `fixtures/html-render.json`: portable parse and semantic HTML behavior.
-2. `fixtures/segment-boundaries.json`: contiguous source and rich-text run policy.
-3. Adapter tests: markdown-it composition, Obsidian DOM/Live Preview, Logseq
+1. `fixtures/models.json`: exact parser models and UTF-16 source ranges.
+2. `fixtures/html-render.json`: portable semantic HTML behavior.
+3. `fixtures/segment-boundaries.json`: contiguous source and rich-text run policy.
+4. Adapter tests: markdown-it composition, Obsidian DOM/Live Preview, Logseq
    conversion and parser conflicts, and VS Code preview wiring.
 
 Rendering-policy fixtures may differ by declared options such as
@@ -116,10 +117,9 @@ integration boundary. Prepare `@inline-annotation/core` as a dependency-free
 package while preserving `markdown-it-inline-annotation/core` as a compatibility
 re-export.
 
-Before extraction:
+The public model names and UTF-16, zero-based, end-exclusive range invariants
+are now fixed in v2 and covered by model fixtures. Before extraction:
 
-- add model-level fixtures independent of HTML serialization;
-- settle public parser/model names and source-range invariants;
 - decide whether fixtures live with the neutral core or in a small conformance
   package;
 - automate release tags and adapter update checks.
@@ -136,6 +136,10 @@ them. Source ranges and model fixtures should make that port mechanical.
 AST adapters are the right place to experiment with rich Markdown children in
 the base. Annotation slots remain plain text unless a later spec version defines
 a separate rich-slot contract.
+
+See [ADAPTERS.md](./ADAPTERS.md) for the integration profiles and port
+checklist. A new host should choose a profile explicitly instead of copying a
+different parser's rule-order workaround.
 
 ## Host Notes
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Mark Inline Annotation v2 stable and freeze its syntax, model, source-range,
+  and `ia-*` class contracts.
+- Add `fixtures/models.json` with exact UTF-16, zero-based, end-exclusive parser
+  models and export it for adapter conformance suites.
+- Document adapter ownership, integration profiles, offset conversion, and the
+  port verification checklist.
+
 ## 0.3.3
 
 - Mark the `markdown-it` peer dependency as optional. Consumers of the `/core`

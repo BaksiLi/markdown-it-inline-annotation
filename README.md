@@ -1,8 +1,8 @@
 # markdown-it-inline-annotation
 
 Reference parser, HTML renderer, and `markdown-it` adapter for **Inline
-Annotation**: visible ruby/furigana, over/under glosses, bouten, overlines, and
-underlines in Markdown.
+Annotation v2**: a stable syntax for visible ruby/furigana, over/under glosses,
+bouten, overlines, and underlines in Markdown.
 
 ```markdown
 [漢字]^^(かんじ)
@@ -100,12 +100,14 @@ import "markdown-it-inline-annotation/styles.css";
 
 ## Host Integration
 
-The core parses contiguous source strings. DOM and rich-text adapters may join
+The core parses contiguous source strings and exposes zero-based, end-exclusive
+UTF-16 source ranges. DOM and rich-text adapters may join
 only semantically transparent runs; they must preserve expressions that cross
 formatting, links, code, highlights, or other semantic boundaries. The shared
-policy corpus is exported as:
+model and boundary corpora are exported as:
 
 ```js
+require("markdown-it-inline-annotation/fixtures/models.json");
 require("markdown-it-inline-annotation/fixtures/segment-boundaries.json");
 ```
 
@@ -139,6 +141,7 @@ packs the tarball, and verifies that `/core` installs and runs without
 Project documents:
 
 - [SPEC.md](./SPEC.md): normative syntax and compatibility contract.
+- [docs/ADAPTERS.md](./docs/ADAPTERS.md): host ownership, profiles, and port checklist.
 - [docs/ROADMAP.md](./docs/ROADMAP.md): architecture and release direction.
 - [CHANGELOG.md](./CHANGELOG.md): package history.
 - [examples/playground.html](./examples/playground.html): generated core demo.

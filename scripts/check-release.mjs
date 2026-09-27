@@ -26,7 +26,7 @@ run(npm, ["test"]);
 run(npm, ["run", "build:examples"]);
 run(node, [
   "-e",
-  "const core = require('markdown-it-inline-annotation/core'); const corpus = require('markdown-it-inline-annotation/fixtures/html-render.json'); const boundaries = require('markdown-it-inline-annotation/fixtures/segment-boundaries.json'); if (typeof core.renderInlineAnnotationsToHtml !== 'function') process.exit(1); if (corpus.version !== 1 || !Array.isArray(corpus.cases) || corpus.cases.length === 0) process.exit(1); if (boundaries.version !== 1 || !Array.isArray(boundaries.cases) || boundaries.cases.length === 0) process.exit(1); console.log('self-reference exports ok:', corpus.cases.length, 'render fixtures,', boundaries.cases.length, 'boundary fixtures');",
+  "const core = require('markdown-it-inline-annotation/core'); const corpus = require('markdown-it-inline-annotation/fixtures/html-render.json'); const models = require('markdown-it-inline-annotation/fixtures/models.json'); const boundaries = require('markdown-it-inline-annotation/fixtures/segment-boundaries.json'); if (typeof core.renderInlineAnnotationsToHtml !== 'function') process.exit(1); if (corpus.version !== 1 || !Array.isArray(corpus.cases) || corpus.cases.length === 0) process.exit(1); if (models.version !== 1 || models.offsetEncoding !== 'utf-16' || !Array.isArray(models.cases) || models.cases.length === 0) process.exit(1); if (boundaries.version !== 1 || !Array.isArray(boundaries.cases) || boundaries.cases.length === 0) process.exit(1); console.log('self-reference exports ok:', corpus.cases.length, 'render fixtures,', models.cases.length, 'model fixtures,', boundaries.cases.length, 'boundary fixtures');",
 ]);
 run(git, ["diff", "--check"], { env: process.env });
 

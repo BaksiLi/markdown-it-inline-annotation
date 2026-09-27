@@ -1,7 +1,9 @@
 # Inline Annotation Fixtures
 
-The package ships two shared conformance corpora:
+The package ships three shared conformance corpora:
 
+- `models.json` covers exact parser models and source ranges without depending
+  on HTML serialization.
 - `html-render.json` covers host-neutral parsing and semantic HTML rendering.
 - `segment-boundaries.json` defines when a rich-text or DOM host may join text
   runs before parsing Inline Annotation.
@@ -49,12 +51,25 @@ with explicit `options` instead.
 These files are canonical in the markdown-it package until the core and
 conformance data move to a neutral package or monorepo.
 
+## Model and Range Contract
+
+`models.json` uses zero-based, end-exclusive UTF-16 offsets into each case's
+exact `input`, matching JavaScript string slicing. Every `source` or `raw` value
+must equal the corresponding input slice. Raw ranges retain backslash escapes;
+unescaping is a later rendering concern.
+
+Hosts may expose byte offsets, Unicode scalar indexes, or line/column pairs.
+Adapters must convert those positions to the portable UTF-16 contract before
+comparing models or exposing core-compatible ranges. Sätteri demonstrates why
+this boundary matters: its 0.9 line reported UTF-8 byte offsets, while 0.10
+reports JavaScript UTF-16 offsets.
+
 ## Sync Policy
 
-Npm-based adapters import published fixture exports when available. The new
-segment corpus is checked into adapters while `0.3.3` is unreleased; switch
-those copies to the package export when their core lockfiles advance. Logseq
-keeps a checked-in copy because its parser is intentionally independent.
+Npm-based adapters should import published fixture exports that match their
+locked core version. An independent parser such as Logseq may keep a checked-in
+copy, but the source version must remain traceable and fixture updates must be
+reviewed explicitly rather than silently diverging.
 
 Long term, a neutral core/conformance package or monorepo should provide one
 fixture source to every adapter.

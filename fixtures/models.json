@@ -1,0 +1,164 @@
+{
+  "version": 1,
+  "description": "Host-neutral Inline Annotation parser models and source ranges.",
+  "offsetEncoding": "utf-16",
+  "rangeConvention": "Zero-based, end-exclusive offsets into the exact input string.",
+  "fixtureSchema": {
+    "required": ["id", "category", "name", "input", "models"],
+    "rangeFields": ["start", "end", "raw"],
+    "options": "Optional core parser options applied to the case."
+  },
+  "cases": [
+    {
+      "id": "astral-prefix-utf16-range",
+      "category": "ranges",
+      "name": "Astral characters before an expression count as two UTF-16 code units",
+      "input": "😀 [漢字]^^(かんじ)",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 3,
+          "end": 14,
+          "source": "[漢字]^^(かんじ)",
+          "base": { "start": 4, "end": 6, "raw": "漢字" },
+          "primaryOp": "^^",
+          "slots": [
+            { "start": 10, "end": 13, "raw": "かんじ", "position": "over", "source": "primary" }
+          ],
+          "overflow": []
+        }
+      ]
+    },
+    {
+      "id": "reverse-chain-positioning",
+      "category": "slots",
+      "name": "Reverse chains preserve operator-driven positions and source provenance",
+      "input": "pre [base]^_(under)^^(over) post",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 4,
+          "end": 27,
+          "source": "[base]^_(under)^^(over)",
+          "base": { "start": 5, "end": 9, "raw": "base" },
+          "primaryOp": "^_",
+          "slots": [
+            { "start": 13, "end": 18, "raw": "under", "position": "under", "source": "primary" },
+            { "start": 22, "end": 26, "raw": "over", "position": "over", "source": "chain" }
+          ],
+          "overflow": []
+        }
+      ]
+    },
+    {
+      "id": "escaped-delimiter-raw-ranges",
+      "category": "escaping",
+      "name": "Range raw values retain source escapes",
+      "input": "[A\\]B]^^(a\\|b)",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 0,
+          "end": 14,
+          "source": "[A\\]B]^^(a\\|b)",
+          "base": { "start": 1, "end": 5, "raw": "A\\]B" },
+          "primaryOp": "^^",
+          "slots": [
+            { "start": 9, "end": 13, "raw": "a\\|b", "position": "over", "source": "primary" }
+          ],
+          "overflow": []
+        }
+      ]
+    },
+    {
+      "id": "pipe-overflow-range",
+      "category": "overflow",
+      "name": "Extra pipe levels remain visible overflow owned by the expression",
+      "input": "[a]^^(x|y|z)",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 0,
+          "end": 12,
+          "source": "[a]^^(x|y|z)",
+          "base": { "start": 1, "end": 2, "raw": "a" },
+          "primaryOp": "^^",
+          "slots": [
+            { "start": 6, "end": 7, "raw": "x", "position": "over", "source": "primary" },
+            { "start": 8, "end": 9, "raw": "y", "position": "under", "source": "pipe" }
+          ],
+          "overflow": [
+            { "start": 9, "end": 11, "raw": "|z" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nested-base-range",
+      "category": "nesting",
+      "name": "A nested expression remains raw source inside the outer base range",
+      "input": "[[護]^^(まも)れ]^_(プロテゴ)",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 0,
+          "end": 20,
+          "source": "[[護]^^(まも)れ]^_(プロテゴ)",
+          "base": { "start": 1, "end": 11, "raw": "[護]^^(まも)れ" },
+          "primaryOp": "^_",
+          "slots": [
+            { "start": 15, "end": 19, "raw": "プロテゴ", "position": "under", "source": "primary" }
+          ],
+          "overflow": []
+        }
+      ]
+    },
+    {
+      "id": "multiple-non-overlapping-models",
+      "category": "scanning",
+      "name": "A scan returns ordered non-overlapping bracketed and abbreviated models",
+      "input": "[a]^^(x) + b^_(y)",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 0,
+          "end": 8,
+          "source": "[a]^^(x)",
+          "base": { "start": 1, "end": 2, "raw": "a" },
+          "primaryOp": "^^",
+          "slots": [
+            { "start": 6, "end": 7, "raw": "x", "position": "over", "source": "primary" }
+          ],
+          "overflow": []
+        },
+        {
+          "form": "abbreviated",
+          "start": 11,
+          "end": 17,
+          "source": "b^_(y)",
+          "base": { "start": 11, "end": 12, "raw": "b" },
+          "primaryOp": "^_",
+          "slots": [
+            { "start": 15, "end": 16, "raw": "y", "position": "under", "source": "primary" }
+          ],
+          "overflow": []
+        }
+      ]
+    },
+    {
+      "id": "escaped-operator-rejected",
+      "category": "rejection",
+      "name": "An escaped operator does not produce a model",
+      "input": "[a]\\^^(x)",
+      "models": []
+    },
+    {
+      "id": "abbreviated-disabled",
+      "category": "options",
+      "name": "The abbreviated form can be disabled without changing bracketed syntax",
+      "input": "a^^(x)",
+      "options": { "enableAbbreviated": false },
+      "models": []
+    }
+  ]
+}

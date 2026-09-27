@@ -15,9 +15,11 @@ export interface InlineAnnotationOptions {
 export type InlineAnnotationForm = "bracketed" | "abbreviated";
 export type InlineAnnotationSlotSource = "primary" | "pipe" | "chain";
 
+/** A zero-based, end-exclusive UTF-16 range into the exact original source. */
 export interface InlineAnnotationRange {
   start: number;
   end: number;
+  /** The original source slice, including any backslash escapes. */
   raw: string;
 }
 
@@ -28,8 +30,10 @@ export interface InlineAnnotationSlot extends InlineAnnotationRange {
 
 export interface InlineAnnotationModel {
   form: InlineAnnotationForm;
+  /** Zero-based, end-exclusive UTF-16 offsets into the original source. */
   start: number;
   end: number;
+  /** The exact original source slice from start to end. */
   source: string;
   base: InlineAnnotationRange;
   primaryOp: AnnotationOp;
@@ -38,9 +42,11 @@ export interface InlineAnnotationModel {
 }
 
 export interface InlineAnnotationMatch {
+  /** Zero-based, end-exclusive UTF-16 offsets into the original source. */
   start: number;
   end: number;
   html: string;
+  /** The exact original source slice from start to end. */
   source: string;
   model: InlineAnnotationModel;
 }
