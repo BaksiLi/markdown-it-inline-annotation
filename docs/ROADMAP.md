@@ -9,7 +9,7 @@ host adapters.
 
 | Project | Role | Current line |
 | --- | --- | --- |
-| `markdown-it-inline-annotation` | canonical spec, parser/model, HTML renderer, markdown-it adapter | `0.3.3` |
+| `markdown-it-inline-annotation` | canonical spec, parser/model, HTML renderer, markdown-it adapter | `0.3.4` |
 | `logseq-furigana-ruby` | independent parser, macros, conversions, Logseq renderer | `0.6.2` |
 | `obsidian-inline-annotation` | Reading view and Live Preview | `0.3.10` |
 | `vscode-inline-annotation` | thin built-in Markdown preview adapter | `0.3.3` |
@@ -80,6 +80,12 @@ output, not the primary correctness suite.
 The adapter lockfiles have been refreshed and the corresponding VS Code,
 Obsidian, and Logseq releases are complete. VS Code remains thin; Obsidian and
 Logseq keep their host-specific boundary tests.
+
+### 0.3.4 stable contract release
+
+- Mark v2 stable and freeze its syntax, model, range, and class contracts.
+- Publish exact model fixtures with UTF-16 source-range invariants.
+- Add adapter ownership, integration profiles, and a port checklist.
 
 ### Sätteri adapter pilot
 

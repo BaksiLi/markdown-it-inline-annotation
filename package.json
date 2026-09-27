@@ -1,6 +1,6 @@
 {
   "name": "markdown-it-inline-annotation",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Inline Annotation parser, HTML renderer, and markdown-it plugin for ruby/furigana, bouten, line marks, and two-slot glosses.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

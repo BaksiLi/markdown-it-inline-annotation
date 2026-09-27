@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.4
 
 - Mark Inline Annotation v2 stable and freeze its syntax, model, source-range,
   and `ia-*` class contracts.
