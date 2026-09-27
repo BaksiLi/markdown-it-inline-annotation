@@ -121,6 +121,7 @@ workarounds remain outside the core.
 | [Inline Ruby Annotation for Obsidian](https://community.obsidian.md/plugins/inline-annotation) | Reading view and Live Preview |
 | [Inline Annotation for VS Code](https://marketplace.visualstudio.com/items?itemName=baksili.vscode-inline-annotation) | built-in Markdown preview |
 | [`logseq-furigana-ruby`](https://github.com/BaksiLi/logseq-furigana-ruby) | Logseq renderer, macros, and conversion commands |
+| `satteri-inline-annotation` | two-phase Sätteri Markdown adapter (local pilot, not published) |
 | remark/unified | planned when an AST pipeline needs it |
 
 ## Development
