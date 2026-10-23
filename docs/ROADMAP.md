@@ -9,10 +9,10 @@ host adapters.
 
 | Project | Role | Current line |
 | --- | --- | --- |
-| `markdown-it-inline-annotation` | canonical spec, parser/model, HTML renderer, markdown-it adapter | `0.3.4` |
-| `logseq-furigana-ruby` | independent parser, macros, conversions, Logseq renderer | `0.6.2` |
-| `obsidian-inline-annotation` | Reading view and Live Preview | `0.3.10` |
-| `vscode-inline-annotation` | thin built-in Markdown preview adapter | `0.3.3` |
+| `markdown-it-inline-annotation` | canonical spec, parser/model, HTML renderer, markdown-it adapter | `0.4.0` |
+| `logseq-furigana-ruby` | independent parser, macros, conversions, Logseq renderer | `0.7.0` |
+| `obsidian-inline-annotation` | Reading view and Live Preview | `0.4.0` |
+| `vscode-inline-annotation` | thin built-in Markdown preview adapter | `0.4.0` |
 | `satteri-inline-annotation` | two-phase Sätteri Markdown adapter | local `0.1.0` pilot |
 | remark/unified | AST adapter | deferred until a real pipeline needs it |
 
@@ -87,6 +87,16 @@ Logseq keep their host-specific boundary tests.
 - Publish exact model fixtures with UTF-16 source-range invariants.
 - Add adapter ownership, integration profiles, and a port checklist.
 
+### 0.4.0 v2 balanced-parenthesis revision
+
+- Allow natural parenthetical text such as `(semi-)formal artefact` in glosses.
+- Keep the v2 model and class contract while explicitly revising the earlier
+  annotation delimiter rule.
+- Require strict balancing and escape both parentheses in converter output.
+- Publish shared rendering and source-range cases alongside migration examples
+  for old first-close interpretations and right-only escaped converter output.
+- Update the shared core and independent Logseq parser together.
+
 ### Sätteri adapter pilot
 
 Cogitatum is the first concrete consumer. The adapter lives in the independent
@@ -116,7 +126,7 @@ row delimiters and need a separate inline-container strategy. The adapter suite
 passes against both Cogitatum's Sätteri `0.9.5` and current `0.10.5`; a real
 Cogitatum production build remains the final pre-publication integration check.
 
-### 0.4 neutral core boundary
+### Future neutral core boundary
 
 External core-only production use now proves that the parser/model is a real
 integration boundary. Prepare `@inline-annotation/core` as a dependency-free

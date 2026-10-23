@@ -528,6 +528,78 @@
                 "category": "rejection",
                 "name": "newline in annotation rejects",
                 "input": "[base]^^(ann\ntext)"
+        },
+        {
+                "id": "parentheses-semi-formal",
+                "category": "parentheses",
+                "name": "parenthetical prefix stays in the annotation",
+                "input": "[artefact]^^((semi-)formal artefact) tail"
+        },
+        {
+                "id": "parentheses-nested",
+                "category": "parentheses",
+                "name": "multiple nested parentheses stay literal",
+                "input": "[gloss]^^(outer (inner (detail)) end)"
+        },
+        {
+                "id": "parentheses-abbreviated-under",
+                "category": "parentheses",
+                "name": "abbreviated under annotation balances parentheses",
+                "input": "term^_((semi-)formal)"
+        },
+        {
+                "id": "parentheses-chain",
+                "category": "parentheses",
+                "name": "both chained annotations balance their own parentheses",
+                "input": "[base]^^((over))^_((under)) tail"
+        },
+        {
+                "id": "parentheses-pipe-overflow",
+                "category": "parentheses",
+                "name": "balanced pairs preserve slot capacity and visible overflow",
+                "input": "[base]^^((over)|(under)|extra (text))^_(visible)"
+        },
+        {
+                "id": "parentheses-pipe-inside-pair",
+                "category": "parentheses",
+                "name": "parentheses do not quote pipe separators",
+                "input": "[base]^^(a(b|c)d)"
+        },
+        {
+                "id": "parentheses-escaped-pair",
+                "category": "parentheses",
+                "name": "escaped parentheses do not affect balancing",
+                "input": "[base]^^(\\(semi-\\)formal artefact)"
+        },
+        {
+                "id": "parentheses-escaped-left",
+                "category": "parentheses",
+                "name": "a standalone literal left parenthesis is escaped",
+                "input": "[base]^^(a\\(b)c)"
+        },
+        {
+                "id": "parentheses-unbalanced",
+                "category": "parentheses",
+                "name": "unbalanced parentheses do not use the earlier delimiter rule",
+                "input": "[base]^^(a(b)"
+        },
+        {
+                "id": "parentheses-old-right-only-escape",
+                "category": "parentheses",
+                "name": "old right-only escaping needs migration",
+                "input": "[base]^^((semi-\\)formal artefact)"
+        },
+        {
+                "id": "parentheses-unbalanced-chain",
+                "category": "parentheses",
+                "name": "unbalanced second annotation leaves the first intact",
+                "input": "[base]^^(ok)^_(a(b)"
+        },
+        {
+                "id": "parentheses-recover-later-match",
+                "category": "parentheses",
+                "name": "unbalanced annotation does not prevent a later independent match",
+                "input": "[bad]^^((oops) next [good]^^(ok)"
         }
 ];
       const source = document.getElementById("source");

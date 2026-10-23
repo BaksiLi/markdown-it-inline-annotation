@@ -9,7 +9,7 @@ implementation to emit diagnostics.
 | ID | Severity | Condition | Suggested action |
 | --- | --- | --- | --- |
 | `IA001_UNCLOSED_BRACKET_BASE` | error | A `[` starts a bracketed base but no matching `]` is found before a newline or parse boundary. | Close the bracket or escape the literal `[`. |
-| `IA002_UNCLOSED_ANNOTATION` | error | An operator is followed by `(` but no matching unescaped `)` is found before a newline or parse boundary. | Close the annotation or escape the literal operator. |
+| `IA002_UNCLOSED_ANNOTATION` | error | An operator is followed by `(` but no depth-zero closing `)` is found before a newline or parse boundary, including when nested parentheses are unbalanced. | Balance nested parentheses, escape standalone parentheses, or escape the literal operator. |
 | `IA003_EMPTY_ANNOTATION` | warning | An annotation slot is empty, such as `[a]^^()`. | Add annotation text or remove the operator. |
 | `IA004_SAME_OPERATOR_CHAIN` | warning | A matched expression is immediately followed by the same operator, such as `[a]^^(x)^^(y)`. | Use the opposite operator or rewrite as separate annotations. |
 | `IA005_SLOT_OVERFLOW_CHAIN` | warning | A pipe-saturated expression is followed by another chained operator, such as `[a]^^(x|y)^_(z)`. | Remove the extra slot or split the expression. |

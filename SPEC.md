@@ -27,11 +27,13 @@ The words "must", "should", and "may" are used in their ordinary specification
 sense: "must" is required for conformance, "should" is recommended unless a host
 constraint makes it impractical, and "may" is optional.
 
-v2 syntax, the two-slot model, source-range semantics, and the `ia-*` class
-contract are frozen. Compatible clarifications and additional conformance cases
-may be added without changing the version. A change that alters a valid model,
-reassigns a slot, changes a public range, or requires different semantic classes
-needs a new specification version.
+v2 keeps the two-slot model, source-range conventions, and `ia-*` class contract
+stable.
+The balanced-parenthesis revision remains part of v2 and changes annotation
+boundaries compared with earlier v2 implementations.
+Implementations must document this revision and its migration requirements;
+it is not fully source-compatible with the earlier delimiter rule.
+See **Annotation Parentheses** below.
 
 ## Normative Specification
 
@@ -155,6 +157,41 @@ literal text, not a slot separator:
 [x]^^(\.-)
 ```
 
+### Annotation Parentheses
+
+Unescaped parentheses inside an annotation must balance.
+The closing `)` at depth zero ends the annotation; nested pairs remain literal
+annotation text, including their parentheses.
+Escaped `\(` and `\)` are literal characters and do not change the depth.
+Newlines and the supplied parse boundary still terminate an unsuccessful match.
+
+```markdown
+[artefact]^^((semi-)formal artefact)
+[term]^_(outer (inner (detail)))
+[base]^^((over))^_((under))
+[base]^^(\(semi-\)formal artefact)
+```
+
+Parentheses do not quote their contents or introduce rich text.
+Every unescaped `|` remains a slot separator, even inside a nested pair:
+`[base]^^(a(b|c)d)` assigns `a(b` and `c)d` to the two slots.
+Chaining and overflow follow the existing capacity rules after the annotation's
+closing delimiter has been found.
+An annotation with unbalanced parentheses is not matched; there is no fallback
+to the earlier first-unescaped-`)` rule.
+
+**Migration from earlier v2 implementations:**
+`[x]^^(a(b)c)` now annotates with `a(b)c`, rather than `a(b` followed by
+literal `c)`.
+To retain that earlier interpretation, write `[x]^^(a\(b)c)`.
+Earlier converters escaped only right parentheses, so
+`[x]^^((semi-\)formal artefact)` must become either
+`[x]^^((semi-)formal artefact)` or `[x]^^(\(semi-\)formal artefact)`.
+Converters emitting arbitrary annotation text must escape both `(` and `)`,
+as well as backslashes and literal pipes.
+Older implementations do not gain balanced-parenthesis support from the v2
+label alone; adapters must update their parser dependency or independent parser.
+
 ### Source Model and Ranges
 
 Portable parser APIs and model fixtures use zero-based, end-exclusive offsets
@@ -187,6 +224,7 @@ has been lost.
 | `^^()` (empty slot) | not matched; literal text |
 | `^^` not followed by `(` | not matched; literal text |
 | unclosed `[` or `(` | not matched |
+| unbalanced unescaped parentheses inside an annotation | not matched |
 | newline inside `[...]` or `(...)` | not matched |
 | `\^^(...)` (escaped operator) | literal text |
 | `[a]^^(x)^^(y)` (same-operator chain) | first matched; `^^(y)` literal |
@@ -336,9 +374,9 @@ opposite-chain    = opposite-op annotation ;
 opposite-op       = "^_" when op is "^^"
                   | "^^" when op is "^_" ;
 
-annotation        = "(" slot-list ")" ;
-slot-list         = slot [ "|" slot ] ;
-slot              = { escaped-char | annotation-char } ;
+annotation        = "(" annotation-body ")" ;
+annotation-body   = { escaped-char | annotation-char | "|"
+                    | "(" annotation-body ")" } ;
 
 bracketed-base    = "[" { escaped-char | bracketed-base | base-char } "]" ;
 abbreviated-base  = 1*abbreviated-base-char ;
@@ -346,7 +384,7 @@ abbreviated-base  = 1*abbreviated-base-char ;
 mark              = ".." | ".-" | ".~" | ".=" ;
 escaped-char      = "\\" any-char ;
 
-annotation-char   = any-char except unescaped "|", unescaped ")", LF, CR ;
+annotation-char   = any-char except unescaped "|", "(", ")", LF, CR ;
 base-char         = any-char except unescaped "]", LF, CR ;
 abbreviated-base-char
                   = any-char except whitespace and Markdown structural delimiters ;
@@ -354,6 +392,12 @@ abbreviated-base-char
 
 Recognition notes:
 
+- Unescaped annotation parentheses are balanced across the entire slot list,
+  not independently per slot.
+  Only a `)` at depth zero closes `annotation`; escaped parentheses do not
+  affect the depth.
+- Split the matched annotation body at every unescaped `|`, including pipes
+  inside nested parentheses, then apply the two-slot capacity and overflow rules.
 - An operator is recognized only when the next character after the operator is
   `(`.
 - `opposite-chain` is accepted only when the first annotation has remaining

@@ -75,14 +75,23 @@ ranges and the neutral model become reusable by the future
 
 ## Migration
 
-- **Backward compatible** for all ruby, bouten, under-slot lines, pipes,
-  chaining, nesting, and escaping.
-- **Only breaking case:** `^^(.-)`, `^^(.~)`, `^^(.=)` previously rendered as
+The original v1-to-v2 migration preserved ruby, bouten, under-slot lines, pipes,
+chaining, nesting, and escaping.
+
+- **Original breaking case:** `^^(.-)`, `^^(.~)`, `^^(.=)` previously rendered as
   literal over-slot ruby text; v2 renders them as over-side lines. Authors who
   want the literal text escape it (`^^(\.-)`). Expected to affect ~no real
   content.
 - Pipe-saturated chains that previously vanished now render the overflow as
   text.
+
+The balanced-parenthesis revision also remains within v2.
+It replaces the first-unescaped-`)` delimiter rule so natural glosses such as
+`(semi-)formal artefact` are not truncated.
+This is a source compatibility change: escape standalone left parentheses to
+preserve earlier splits, and escape both sides of old right-only escaped pairs.
+The [specification](../SPEC.md#annotation-parentheses) contains exact migration
+examples; no automatic fallback guesses the earlier interpretation.
 
 ## Class contract additions
 
@@ -103,10 +112,13 @@ unchanged:
 
 ## Host compatibility
 
-v2 adds no new syntax, so the host-conflict surface is identical to v0.x: Logseq
-still pre-parses `^^x^^` / `_x_` (handled at the adapter via macro/HTML
+The original v2 changes added no new sigils.
+The balanced-parenthesis revision likewise keeps the existing operators,
+but it does not bypass host parsing.
+Logseq still pre-parses `^^x^^` / `_x_` (handled at the adapter via macro/HTML
 conversion); Obsidian and VS Code still rely on the mandatory `(` after the
-operator. See [`ROADMAP.md`](./ROADMAP.md) under Boundary Policy and Host Notes.
+operator.
+See [`ROADMAP.md`](./ROADMAP.md) under Boundary Policy and Host Notes.
 
 ## Markdown field boundaries
 

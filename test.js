@@ -383,6 +383,34 @@ test("escaped close paren stays literal", () => {
   hasAll(html, ["<rt>a)b</rt>"]);
 });
 
+test("balanced parentheses respect source bounds and newline boundaries", () => {
+  const input = "[x]^^((semi-)formal)";
+  assert.equal(findInlineAnnotationModel(input, 0, input.length - 1), null);
+  assert.equal(findInlineAnnotationModel(input)?.source, input);
+
+  for (const newline of ["\n", "\r", "\r\n"]) {
+    for (const escape of ["", "\\"]) {
+      const source = `[x]^^((semi-${escape}${newline})formal)`;
+      assert.equal(findInlineAnnotationModel(source), null);
+      assert.equal(renderInlineAnnotationsToHtml(source), source);
+    }
+  }
+});
+
+test("parenthesis balancing honors backslash parity without a nesting limit", () => {
+  const even = String.raw`[x]^^(a\\(b))`;
+  assert.equal(findInlineAnnotationModel(even)?.slots[0].raw, String.raw`a\\(b)`);
+  hasAll(renderInlineAnnotationsToHtml(even), ["<rt>a\\(b)</rt>"]);
+
+  const odd = String.raw`[x]^^(a\\\(b)tail`;
+  assert.equal(findInlineAnnotationModel(odd)?.slots[0].raw, String.raw`a\\\(b`);
+  hasAll(renderInlineAnnotationsToHtml(odd), ["<rt>a\\(b</rt>", "</ruby>tail"]);
+
+  const annotation = "(".repeat(256) + "text" + ")".repeat(256);
+  const model = findInlineAnnotationModel(`[x]^^(${annotation})`);
+  assert.equal(model?.slots[0].raw, annotation);
+});
+
 test("language examples from Logseq demo", () => {
   hasAll(inline("H₂O^^(Hydrogen Dioxide)"), ["H₂O", "<rt>Hydrogen Dioxide</rt>"]);
   hasAll(inline("[Москва]^^(Moskva|Moscow)"), ["<rt>Moskva</rt>", "<rt>Moscow</rt>"]);

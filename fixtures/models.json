@@ -146,6 +146,84 @@
       ]
     },
     {
+      "id": "balanced-parentheses-chain-ranges",
+      "category": "parentheses",
+      "name": "Parenthetical slots and an astral prefix preserve exact UTF-16 ranges",
+      "input": "😀 [x]^^((a))^_((b)) tail",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 3,
+          "end": 20,
+          "source": "[x]^^((a))^_((b))",
+          "base": { "start": 4, "end": 5, "raw": "x" },
+          "primaryOp": "^^",
+          "slots": [
+            { "start": 9, "end": 12, "raw": "(a)", "position": "over", "source": "primary" },
+            { "start": 16, "end": 19, "raw": "(b)", "position": "under", "source": "chain" }
+          ],
+          "overflow": []
+        }
+      ]
+    },
+    {
+      "id": "balanced-parentheses-pipe-ranges",
+      "category": "parentheses",
+      "name": "Nested parentheses neither quote pipes nor change overflow ownership",
+      "input": "[x]^^(a(b|c)d|extra(z)) tail",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 0,
+          "end": 23,
+          "source": "[x]^^(a(b|c)d|extra(z))",
+          "base": { "start": 1, "end": 2, "raw": "x" },
+          "primaryOp": "^^",
+          "slots": [
+            { "start": 6, "end": 9, "raw": "a(b", "position": "over", "source": "primary" },
+            { "start": 10, "end": 13, "raw": "c)d", "position": "under", "source": "pipe" }
+          ],
+          "overflow": [
+            { "start": 13, "end": 22, "raw": "|extra(z)" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "escaped-parentheses-raw-ranges",
+      "category": "parentheses",
+      "name": "Escaped parentheses retain their exact source spelling",
+      "input": "[x]^^(\\(semi-\\)formal) tail",
+      "models": [
+        {
+          "form": "bracketed",
+          "start": 0,
+          "end": 22,
+          "source": "[x]^^(\\(semi-\\)formal)",
+          "base": { "start": 1, "end": 2, "raw": "x" },
+          "primaryOp": "^^",
+          "slots": [
+            { "start": 6, "end": 21, "raw": "\\(semi-\\)formal", "position": "over", "source": "primary" }
+          ],
+          "overflow": []
+        }
+      ]
+    },
+    {
+      "id": "unbalanced-parentheses-rejected",
+      "category": "rejection",
+      "name": "An inner opening parenthesis requires its own closing parenthesis",
+      "input": "[x]^^(a(b)",
+      "models": []
+    },
+    {
+      "id": "right-only-escaped-parentheses-rejected",
+      "category": "rejection",
+      "name": "Escaped right parentheses do not balance unescaped left parentheses",
+      "input": "[x]^^((semi-\\)formal)",
+      "models": []
+    },
+    {
       "id": "escaped-operator-rejected",
       "category": "rejection",
       "name": "An escaped operator does not produce a model",

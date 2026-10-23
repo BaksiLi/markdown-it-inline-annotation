@@ -506,6 +506,172 @@
         "<ruby"
       ],
       "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-semi-formal",
+      "name": "parenthetical prefix stays in the annotation",
+      "input": "[artefact]^^((semi-)formal artefact) tail",
+      "contains": [
+        "<rt>(semi-)formal artefact</rt>",
+        "</ruby> tail"
+      ],
+      "counts": [
+        {
+          "pattern": "<rt>",
+          "count": 1
+        }
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-nested",
+      "name": "multiple nested parentheses stay literal",
+      "input": "[gloss]^^(outer (inner (detail)) end)",
+      "contains": [
+        "<rt>outer (inner (detail)) end</rt>"
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-abbreviated-under",
+      "name": "abbreviated under annotation balances parentheses",
+      "input": "term^_((semi-)formal)",
+      "contains": [
+        "ia-ruby-under",
+        "<rt>(semi-)formal</rt>"
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-chain",
+      "name": "both chained annotations balance their own parentheses",
+      "input": "[base]^^((over))^_((under)) tail",
+      "contains": [
+        "<rt>(over)</rt>",
+        "<rt>(under)</rt>",
+        "</ruby> tail"
+      ],
+      "counts": [
+        {
+          "pattern": "<rt>",
+          "count": 2
+        }
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-pipe-overflow",
+      "name": "balanced pairs preserve slot capacity and visible overflow",
+      "input": "[base]^^((over)|(under)|extra (text))^_(visible)",
+      "contains": [
+        "<rt>(over)</rt>",
+        "<rt>(under)</rt>",
+        "|extra (text)^_(visible)"
+      ],
+      "counts": [
+        {
+          "pattern": "<rt>",
+          "count": 2
+        }
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-pipe-inside-pair",
+      "name": "parentheses do not quote pipe separators",
+      "input": "[base]^^(a(b|c)d)",
+      "contains": [
+        "<rt>a(b</rt>",
+        "<rt>c)d</rt>"
+      ],
+      "counts": [
+        {
+          "pattern": "<rt>",
+          "count": 2
+        }
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-escaped-pair",
+      "name": "escaped parentheses do not affect balancing",
+      "input": "[base]^^(\\(semi-\\)formal artefact)",
+      "contains": [
+        "<rt>(semi-)formal artefact</rt>"
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-escaped-left",
+      "name": "a standalone literal left parenthesis is escaped",
+      "input": "[base]^^(a\\(b)c)",
+      "contains": [
+        "<rt>a(b</rt>",
+        "</ruby>c)"
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-unbalanced",
+      "name": "unbalanced parentheses do not use the earlier delimiter rule",
+      "input": "[base]^^(a(b)",
+      "notContains": [
+        "ia-ruby"
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-old-right-only-escape",
+      "name": "old right-only escaping needs migration",
+      "input": "[base]^^((semi-\\)formal artefact)",
+      "notContains": [
+        "ia-ruby"
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-unbalanced-chain",
+      "name": "unbalanced second annotation leaves the first intact",
+      "input": "[base]^^(ok)^_(a(b)",
+      "contains": [
+        "<rt>ok</rt>",
+        "</ruby>^_(a(b)"
+      ],
+      "counts": [
+        {
+          "pattern": "<rt>",
+          "count": 1
+        }
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
+    },
+    {
+      "id": "parentheses-recover-later-match",
+      "name": "unbalanced annotation does not prevent a later independent match",
+      "input": "[bad]^^((oops) next [good]^^(ok)",
+      "contains": [
+        "[bad]^^((oops) next ",
+        "<rt>ok</rt>"
+      ],
+      "counts": [
+        {
+          "pattern": "<rt>",
+          "count": 1
+        }
+      ],
+      "category": "parentheses",
+      "assertionType": "semantic"
     }
   ]
 }

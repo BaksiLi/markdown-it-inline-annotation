@@ -150,9 +150,14 @@ function splitByUnescapedPipeWithRanges(input: string, offset: number): InlineAn
 }
 
 function findCloseParen(input: string, start: number, max: number): number {
+  let depth = 0;
   for (let i = start; i < max; i++) {
     if (input[i] === "\n" || input[i] === "\r") return -1;
-    if (input[i] === ")" && !isEscaped(input, i)) return i;
+    if (input[i] === "(" && !isEscaped(input, i)) depth++;
+    if (input[i] === ")" && !isEscaped(input, i)) {
+      if (depth === 0) return i;
+      depth--;
+    }
   }
   return -1;
 }

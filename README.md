@@ -66,6 +66,7 @@ instance.
 | `[base]^_(.~)` | wavy underline |
 | `[base]^_(.=)` | double underline |
 | `[title]^^(.-)` | solid overline |
+| `[artefact]^^((semi-)formal artefact)` | literal balanced parentheses in a gloss |
 
 Space-separated readings can align per character:
 
@@ -75,6 +76,12 @@ Space-separated readings can align per character:
 
 See [SPEC.md](./SPEC.md) for the complete grammar, escapes, overflow behavior,
 class contract, and host-boundary requirements.
+
+Annotation parentheses must balance; use `\(` or `\)` for standalone literal
+parentheses.
+This v2 revision changes the earlier first-unescaped-`)` delimiter rule.
+Old converter output that escaped only right parentheses needs both sides
+escaped, or the natural balanced spelling shown above.
 
 ## Options
 
@@ -137,6 +144,15 @@ npm run check:release
 `check:release` runs tests, regenerates examples, checks exports and whitespace,
 packs the tarball, and verifies that `/core` installs and runs without
 `markdown-it`.
+
+Pushing a `v<package-version>` tag runs the complete release check, publishes
+the tested archive to npm, and attaches it to a GitHub release.
+Configure npm trusted publishing for `BaksiLi/markdown-it-inline-annotation`
+and workflow `release.yml` once; the workflow uses GitHub OIDC rather than a
+stored npm token.
+To retry a release, dispatch the Release workflow on the same tag.
+An already published version is accepted only when its archive integrity
+matches the current build.
 
 Project documents:
 

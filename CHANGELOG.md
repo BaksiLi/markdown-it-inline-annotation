@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+- Support balanced parentheses in annotation text within Inline Annotation v2,
+  including nested pairs, chained slots, and exact source ranges.
+- **Source compatibility:** replace the earlier first-unescaped-`)` delimiter
+  rule with strict balancing.
+  Escape a standalone `(` as `\(` to preserve an earlier split, and escape both
+  parentheses when migrating old converter output that escaped only `)`.
+  Unbalanced input stays unmatched rather than falling back to the old rule.
+- Add tag-triggered npm trusted publishing and GitHub releases after the full
+  release check.
+
 ## 0.3.4
 
 - Mark Inline Annotation v2 stable and freeze its syntax, model, source-range,
